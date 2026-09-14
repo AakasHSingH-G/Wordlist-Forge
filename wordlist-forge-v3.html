@@ -1,0 +1,1790 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>wordlist-forge :: root@kali</title>
+<style>
+  @font-face{
+    font-family:'ForgeMono';
+    src: local('JetBrains Mono'), local('Fira Code'), local('IBM Plex Mono');
+  }
+  :root{
+    --bg:#050a08;
+    --bg-alt:#0a1310;
+    --panel:#0b1512;
+    --panel-2:#0e1a15;
+    --border:#16261f;
+    --border-soft:#0f1c17;
+    --phosphor:#33e890;
+    --phosphor-soft:rgba(51,232,144,0.07);
+    --phosphor-dim:#1a7a4d;
+    --amber:#cda15f;
+    --gold:#d8bd85;
+    --danger:#ff5f6b;
+    --text:#d7e6de;
+    --text-dim:#5a7368;
+    --text-dimmer:#3a4b44;
+    --mono:'ForgeMono',ui-monospace,'JetBrains Mono','Fira Code','IBM Plex Mono',Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--mono);}
+  ::selection{background:var(--phosphor-dim);color:#04140a;}
+  ::-webkit-scrollbar{width:9px;height:9px;}
+  ::-webkit-scrollbar-track{background:var(--bg-alt);}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+  ::-webkit-scrollbar-thumb:hover{background:var(--phosphor-dim);}
+  :focus-visible{outline:1.5px solid var(--phosphor);outline-offset:2px;}
+
+  body{
+    min-height:100vh;
+    padding:22px 16px 40px;
+    background-image:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(61,255,154,0.06), transparent 60%);
+  }
+
+  .crt{
+    max-width:1180px;margin:0 auto;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:linear-gradient(180deg, var(--bg-alt), var(--bg));
+    box-shadow:0 0 0 1px rgba(0,0,0,0.4), 0 30px 80px -30px rgba(0,0,0,0.8), inset 0 0 60px rgba(61,255,154,0.02);
+    overflow:hidden;
+    position:relative;
+  }
+  .crt::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+    mix-blend-mode:overlay;
+  }
+
+  .titlebar{
+    display:flex;align-items:center;gap:10px;
+    padding:11px 14px;border-bottom:1px solid var(--border);
+    background:var(--panel);
+  }
+  .dots{display:flex;gap:7px;}
+  .dot{width:11px;height:11px;border-radius:50%;}
+  .dot.r{background:#ff5f57;}
+  .dot.y{background:#febc2e;}
+  .dot.g{background:#28c840;}
+  .titletext{flex:1;text-align:center;font-size:11.5px;color:var(--text-dim);letter-spacing:0.3px;}
+  .scope-badge{font-size:10px;color:var(--phosphor);border:1px solid var(--phosphor-dim);padding:3px 8px;border-radius:3px;white-space:nowrap;}
+
+  .termhead{padding:16px 20px 4px;border-bottom:1px solid var(--border-soft);}
+  .prompt-line{font-size:12.5px;color:var(--text-dim);margin-bottom:10px;}
+  .prompt-line .p1{color:var(--phosphor);}
+  .prompt-line .p2{color:var(--amber);}
+  #bootLine::after{content:'▍';color:var(--phosphor);animation:blink 1s step-end infinite;}
+  .bootdone::after{display:none;}
+  @keyframes blink{50%{opacity:0;}}
+
+  .banner{
+    font-size:9.5px;line-height:1.15;color:var(--phosphor-dim);white-space:pre;
+    margin:2px 0 12px;overflow-x:auto;
+  }
+  .banner b{color:var(--phosphor);}
+  .tagline{font-size:11.5px;color:var(--text-dim);margin-bottom:14px;}
+
+  .app{padding:18px 20px 8px;opacity:0;transform:translateY(6px);transition:opacity .5s ease, transform .5s ease;}
+  .app.ready{opacity:1;transform:translateY(0);}
+
+  .layout{display:grid;grid-template-columns:172px 1fr 320px;gap:16px;}
+  @media (max-width:960px){.layout{grid-template-columns:1fr;}}
+
+  .modes{display:flex;flex-direction:column;gap:6px;}
+  .modes .sec-label{font-size:10px;color:var(--text-dimmer);letter-spacing:1px;margin:2px 0 4px 2px;}
+  .mode-btn{
+    text-align:left;background:transparent;border:1px solid var(--border);color:var(--text-dim);
+    padding:9px 11px;border-radius:5px;cursor:pointer;font-family:var(--mono);transition:border-color .15s, background .15s;
+  }
+  .mode-btn b{display:block;color:var(--text);font-size:12.5px;font-weight:600;}
+  .mode-btn small{font-size:10px;color:var(--text-dim);}
+  .mode-btn:hover{border-color:var(--phosphor-dim);}
+  .mode-btn.active{border-color:var(--phosphor);background:var(--phosphor-soft);}
+  .mode-btn.active b{color:var(--phosphor);}
+  .mode-btn .glyph{color:var(--phosphor-dim);margin-right:5px;}
+
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:16px 17px;}
+  .panel h2{font-size:12.5px;color:var(--text);margin:0 0 4px;font-weight:600;}
+  .panel h2 em{color:var(--phosphor-dim);font-style:normal;font-weight:400;}
+  .panel .desc{font-size:11px;color:var(--text-dim);margin-bottom:14px;}
+
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:10.5px;color:var(--text-dim);margin-bottom:6px;letter-spacing:0.2px;}
+  input[type=text],textarea{
+    width:100%;background:#040807;border:1px solid var(--border);color:var(--phosphor);
+    padding:8px 10px;border-radius:5px;font-family:var(--mono);font-size:12.5px;
+  }
+  textarea{resize:vertical;min-height:76px;line-height:1.55;}
+  input[type=text]:focus,textarea:focus{outline:none;border-color:var(--phosphor-dim);box-shadow:0 0 0 3px var(--phosphor-soft);}
+  input[type=text]::placeholder,textarea::placeholder{color:var(--text-dimmer);}
+
+  .charset-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px;}
+  .chip{
+    display:flex;align-items:center;gap:8px;border:1px solid var(--border);
+    padding:8px 10px;border-radius:5px;cursor:pointer;user-select:none;background:#040807;transition:border-color .15s;
+  }
+  .chip:hover{border-color:var(--phosphor-dim);}
+  .chip.on{border-color:var(--phosphor);background:var(--phosphor-soft);}
+  .chip .lab{font-size:12px;color:var(--text);flex:1;}
+  .chip .sample{font-size:10.5px;color:var(--text-dim);}
+  .chip.on .sample{color:var(--phosphor-dim);}
+  .check{width:13px;height:13px;border:1px solid var(--text-dim);border-radius:3px;flex-shrink:0;position:relative;}
+  .chip.on .check{background:var(--phosphor);border-color:var(--phosphor);}
+  .chip.on .check::after{content:'';position:absolute;left:3px;top:0px;width:4px;height:8px;border:solid #04140a;border-width:0 2px 2px 0;transform:rotate(45deg);}
+
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+
+  .slider-row{display:flex;align-items:center;gap:10px;}
+  input[type=range]{flex:1;accent-color:var(--phosphor);height:3px;}
+  .len-val{font-size:11.5px;color:var(--phosphor);min-width:64px;text-align:right;}
+  .len-inputs{display:flex;align-items:center;gap:10px;}
+  .len-inputs input[type=number]{
+    width:64px;background:#040807;border:1px solid var(--border);color:var(--phosphor);
+    padding:8px 8px;border-radius:5px;font-family:var(--mono);font-size:13px;text-align:center;
+  }
+  .len-inputs input[type=number]:focus{outline:none;border-color:var(--phosphor-dim);box-shadow:0 0 0 3px var(--phosphor-soft);}
+  .len-to{color:var(--text-dim);font-size:11px;}
+  .len-inputs.bad input[type=number]{border-color:var(--danger);}
+
+  .toggle-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0 6px;}
+  .tbtn{border:1px solid var(--border);background:#040807;color:var(--text-dim);padding:8px 6px;border-radius:5px;font-size:11px;cursor:pointer;text-align:center;transition:border-color .15s;}
+  .tbtn:hover{border-color:var(--phosphor-dim);}
+  .tbtn.on{border-color:var(--phosphor);color:var(--phosphor);background:var(--phosphor-soft);}
+
+  .preset-list{display:flex;flex-direction:column;gap:7px;max-height:270px;overflow-y:auto;padding-right:2px;}
+  .preset{
+    border:1px solid var(--border);background:#040807;padding:9px 11px;border-radius:5px;
+    display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:border-color .15s;
+  }
+  .preset:hover{border-color:var(--phosphor-dim);}
+  .preset.on{border-color:var(--phosphor);background:var(--phosphor-soft);}
+  .preset .name{font-size:12px;color:var(--text);}
+  .preset .cnt{font-size:10.5px;color:var(--text-dim);}
+  .preset.on .name{color:var(--phosphor);}
+  .preset-actions{display:flex;gap:14px;margin-bottom:10px;}
+  .link-btn{background:none;border:none;color:var(--phosphor-dim);font-family:var(--mono);font-size:10.5px;cursor:pointer;padding:0;text-decoration:underline;}
+  .link-btn:hover{color:var(--phosphor);}
+
+  .estimate-bar{
+    display:flex;justify-content:space-between;align-items:center;
+    border:1px dashed var(--border);border-radius:5px;padding:8px 11px;margin:12px 0;
+    font-size:11px;color:var(--text-dim);
+  }
+  .estimate-bar b{color:var(--amber);}
+  .estimate-bar.capped b{color:var(--danger);}
+
+  .generate-btn{
+    width:100%;margin-top:4px;background:var(--phosphor);color:#04140a;border:none;padding:12px;
+    font-family:var(--mono);font-weight:700;font-size:13px;border-radius:6px;cursor:pointer;letter-spacing:0.3px;
+    transition:background .12s, transform .05s;
+  }
+  .generate-btn:hover{background:#66ffb4;}
+  .generate-btn:active{transform:translateY(1px);}
+
+  .hint{font-size:10.5px;color:var(--text-dim);margin-top:-4px;margin-bottom:12px;line-height:1.5;}
+  .hint code{color:var(--phosphor-dim);}
+
+  .sbx-term{
+    background:#030605;border:1px solid var(--border);border-radius:6px;
+    padding:12px 13px;height:378px;overflow-y:auto;font-size:11.8px;line-height:1.75;margin-bottom:10px;
+  }
+  .sbx-line{white-space:pre-wrap;word-break:break-word;}
+  .sbx-cmd{color:var(--text-dim);}
+  .sbx-out{color:var(--text);}
+  .sbx-heading{color:var(--phosphor);font-weight:700;letter-spacing:0.3px;}
+  .sbx-flag{color:var(--gold);}
+  .sbx-err{color:var(--danger);}
+  .sbx-inputrow{
+    display:flex;align-items:center;gap:9px;border:1px solid var(--border);border-radius:6px;
+    padding:9px 11px;background:#040807;transition:border-color .15s;
+  }
+  .sbx-inputrow:focus-within{border-color:var(--phosphor-dim);box-shadow:0 0 0 3px var(--phosphor-soft);}
+  .sbx-prompt{color:var(--phosphor);font-size:11.5px;white-space:nowrap;}
+  #sbxInput{flex:1;background:transparent;border:none;color:var(--phosphor);font-family:var(--mono);font-size:12.5px;}
+  #sbxInput:focus{outline:none;}
+
+  .finding{border-left:3px solid var(--border);padding:9px 11px;margin:0 8px 8px;border-radius:4px;background:#040807;}
+  .finding.critical{border-left-color:var(--danger);}
+  .finding.high{border-left-color:var(--gold);}
+  .finding.medium{border-left-color:var(--phosphor-dim);}
+  .finding.low{border-left-color:var(--text-dim);}
+  .finding.info{border-left-color:var(--text-dimmer);}
+  .finding .fhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;}
+  .finding .ftitle{color:var(--text);font-weight:600;font-size:12px;}
+  .finding .fsev{font-size:9px;text-transform:uppercase;letter-spacing:0.5px;padding:2px 7px;border-radius:9px;border:1px solid var(--border);color:var(--text-dim);white-space:nowrap;}
+  .finding.critical .fsev{color:var(--danger);border-color:var(--danger);}
+  .finding.high .fsev{color:var(--gold);border-color:var(--gold);}
+  .finding.medium .fsev{color:var(--phosphor-dim);border-color:var(--phosphor-dim);}
+  .finding .fmeta{color:var(--text-dim);font-size:10.5px;margin-bottom:5px;}
+  .finding .fsnippet{color:var(--phosphor-dim);font-size:11px;background:#020403;padding:6px 8px;border-radius:3px;overflow-x:auto;white-space:pre;margin-bottom:5px;}
+  .finding .fnote{color:var(--text-dim);font-size:10.5px;line-height:1.5;}
+  select#scanMinSeverity{width:100%;background:#040807;border:1px solid var(--border);color:var(--phosphor);padding:8px 10px;border-radius:5px;font-family:var(--mono);font-size:12.5px;}
+
+  .output-panel{display:flex;flex-direction:column;height:100%;}
+  .out-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;}
+  .out-count{font-size:10.5px;border:1px solid var(--border);padding:4px 10px;border-radius:12px;color:var(--phosphor);white-space:nowrap;}
+  .out-actions{display:flex;gap:6px;}
+  .icon-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:6px 9px;border-radius:5px;cursor:pointer;font-size:11px;font-family:var(--mono);transition:border-color .15s,color .15s;}
+  .icon-btn:hover{color:var(--phosphor);border-color:var(--phosphor-dim);}
+  .search-row{margin-bottom:8px;}
+  .search-row input{font-size:11px;padding:6px 9px;}
+  .out-box{flex:1;background:#030605;border:1px solid var(--border);border-radius:6px;padding:2px 0;min-height:420px;max-height:560px;overflow-y:auto;font-size:11.5px;line-height:1.9;}
+  .out-empty{color:var(--text-dim);display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;font-size:11.5px;text-align:center;padding:30px 14px;}
+  .out-line{display:flex;color:var(--text);white-space:pre;padding:0 10px;}
+  .out-line:hover{color:var(--phosphor);background:rgba(61,255,154,0.04);}
+  .out-line .ln{color:var(--text-dimmer);width:44px;flex-shrink:0;text-align:right;margin-right:12px;user-select:none;}
+  .out-line .wd{flex:1;overflow:hidden;text-overflow:ellipsis;}
+
+  footer{margin:16px 20px 18px;color:var(--text-dim);font-size:10.5px;border-top:1px solid var(--border-soft);padding-top:13px;}
+  footer b{color:var(--amber);}
+  footer .path{color:var(--phosphor-dim);}
+
+  @media (prefers-reduced-motion: reduce){
+    .app{transition:none;}
+    #bootLine::after{animation:none;}
+  }
+</style>
+</head>
+<body>
+<div class="crt">
+
+  <div class="titlebar">
+    <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+    <div class="titletext">root@kali: ~/wordlist-forge</div>
+    <div class="scope-badge">AUTHORIZED USE ONLY</div>
+  </div>
+
+  <div class="termhead">
+    <div class="prompt-line"><span class="p1">root@kali</span>:<span class="p2">~/wordlist-forge</span># <span id="bootLine">./forge --init</span></div>
+    <pre class="banner"><b> __      __            _ _ _     _     ___                    
+ \ \    / /___ _ _ __| | (_)__| |_  | __|__ _ _ __ _ ___ 
+  \ \/\/ / _ \ '_/ _` | | (_-<  _| | _/ _ \ '_/ _` / -_)
+   \_/\_/\___/_| \__,_|_|_/__/\__| |_|\___/_| \__, \___|
+                                               |___/     </b>v2.0 — bug-bounty / VAPT wordlist engine</pre>
+  </div>
+
+  <div class="app" id="app">
+    <div class="layout">
+
+      <div class="modes">
+        <div class="sec-label">GENERATOR</div>
+        <button class="mode-btn active" data-mode="random"><b><span class="glyph">#</span>Random</b><small>Charset + length</small></button>
+        <button class="mode-btn" data-mode="pattern"><b><span class="glyph">#</span>Pattern</b><small>Mask: ?l?u?d?s</small></button>
+        <button class="mode-btn" data-mode="mutate"><b><span class="glyph">#</span>Mutate</b><small>Leet, case, years</small></button>
+        <button class="mode-btn" data-mode="combine"><b><span class="glyph">#</span>Combine</b><small>Chain seed words</small></button>
+        <button class="mode-btn" data-mode="presets"><b><span class="glyph">#</span>Presets</b><small>OSINT seed lists</small></button>
+        <div class="sec-label" style="margin-top:10px;">ANALYSIS</div>
+        <button class="mode-btn" data-mode="scan"><b><span class="glyph">#</span>Code Review</b><small>Paste code → find secrets/flaws</small></button>
+        <div class="sec-label" style="margin-top:10px;">REFERENCE</div>
+        <button class="mode-btn" data-mode="sandbox"><b><span class="glyph">$</span>Sandbox</b><small>CLI help &amp; docs</small></button>
+      </div>
+
+      <div class="panel" id="centerPanel"></div>
+
+      <div class="panel output-panel">
+        <div class="out-head">
+          <span class="out-count" id="outCount">0 results</span>
+          <div class="out-actions">
+            <button class="icon-btn" id="copyBtn" title="Copy all">copy</button>
+            <button class="icon-btn" id="dlBtn" title="Download .txt">⬇ .txt</button>
+            <button class="icon-btn" id="clearBtn" title="Clear">✕</button>
+          </div>
+        </div>
+        <div class="search-row">
+          <input type="text" id="filterInput" placeholder="/ filter results...">
+        </div>
+        <div class="out-box" id="outBox">
+          <div class="out-empty">⚡<br>Results will render here<br>after you generate or scan</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <b>Scope reminder:</b> run generated lists only against targets you own or hold written authorization for — a CTF box, your own lab, or a signed pentest / <span class="path">bug-bounty</span> scope. Anything else is unauthorized access.
+  </footer>
+
+</div>
+
+<script>
+// ---------- boot line effect ----------
+window.addEventListener('load', ()=>{
+  setTimeout(()=>{
+    document.getElementById('bootLine').classList.add('bootdone');
+    document.getElementById('bootLine').textContent = './forge --init  [ OK ]';
+    document.getElementById('app').classList.add('ready');
+  }, 480);
+});
+
+const state = {
+  mode: 'random',
+  charsets: { lower:true, upper:true, digits:true, special:false },
+  customChars: '',
+  minLen: 6, maxLen: 12,
+  prefix:'', suffix:'',
+  pattern: '?l?l?l?l?d?d?d?d',
+  mutateWords: [],
+  mutateOps: { case:true, l33t:true, nums:true, years:true, symbols:false, reverse:false, double:false },
+  combineWords: 'john\nadmin\n2024\npassword',
+  combineDepth: 2,
+  combineOps: { case:false, nums:false, years:false, symbols:false },
+  presetSel: new Set(['usernames']),
+  sandboxLog: [],
+  scanSimpleMode: false,
+  sandboxHistory: [],
+  sandboxHistoryIdx: 0,
+};
+
+const CHARSETS = {
+  lower:'abcdefghijklmnopqrstuvwxyz',
+  upper:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  digits:'0123456789',
+  special:'!@#$%^&*'
+};
+
+const PRESETS = {
+  common: { label:'Common Passwords', words:['password','123456','12345678','qwerty','letmein','welcome','admin','iloveyou','monkey','dragon','football','baseball','master','shadow','superman','trustno1','sunshine','princess','flower','loveme','freedom','whatever','starwars','batman','access','abc123','passw0rd','1qaz2wsx','password1','changeme'] },
+  usernames: { label:'Usernames', words:['admin','administrator','root','user','test','guest','demo','support','service','operator','manager','superadmin','sysadmin','webadmin','dbadmin','backup','info','office','sales','contact'] },
+  network: { label:'Network Defaults', words:['router','modem','gateway','wifi','wireless','default','netgear','linksys','tplink','dlink','cisco','asus','belkin','fios','xfinity','att','comcast'] },
+  email: { label:'Email Patterns', words:['info','contact','support','sales','admin','hello','office','no-reply','noreply','help','billing','hr','careers'] },
+  seasonal: { label:'Seasonal', words:['summer','winter','spring','autumn','christmas','xmas','newyear','2023','2024','2025','2026','january','december'] },
+  company: { label:'Company Keywords', words:['company','corp','inc','ltd','group','team','staff','internal','hq','office','dept','it'] },
+  tech: { label:'Tech / IT', words:['server','database','backup','cloud','vpn','firewall','network','system','devops','cisco','oracle','mysql','apache','nginx'] },
+  namecombo: { label:'Name Combos', words:['john','jane','mike','sarah','david','chris','alex','sam','admin1','user1'] },
+};
+
+const MAX_RESULTS = 50000;
+
+// ---------- mode switching ----------
+document.querySelectorAll('.mode-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.mode = btn.dataset.mode;
+    renderPanel();
+  });
+});
+
+function renderPanel(){
+  const p = document.getElementById('centerPanel');
+  if(state.mode === 'random') p.innerHTML = randomPanelHTML();
+  else if(state.mode === 'pattern') p.innerHTML = patternPanelHTML();
+  else if(state.mode === 'mutate') p.innerHTML = mutatePanelHTML();
+  else if(state.mode === 'combine') p.innerHTML = combinePanelHTML();
+  else if(state.mode === 'presets') p.innerHTML = presetsPanelHTML();
+  else if(state.mode === 'scan') p.innerHTML = scanPanelHTML();
+  else if(state.mode === 'sandbox') p.innerHTML = sandboxPanelHTML();
+  bindPanelEvents();
+  if(state.mode === 'sandbox') bindSandboxEvents();
+  else if(state.mode === 'scan') bindScanEvents();
+  else updateEstimate();
+}
+
+function commonFieldsHTML(){
+  return `
+    <div class="field">
+      <label>Length range <span class="hint" style="display:inline;margin:0;">(final string, incl. prefix/suffix)</span></label>
+      <div class="len-inputs">
+        <input type="number" id="minLenInput" min="1" max="40" value="${state.minLen}">
+        <span class="len-to">to</span>
+        <input type="number" id="maxLenInput" min="1" max="40" value="${state.maxLen}">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Prefix</label>
+        <input type="text" id="prefixInput" placeholder="e.g. admin_" value="${state.prefix}">
+      </div>
+      <div class="field">
+        <label>Suffix</label>
+        <input type="text" id="suffixInput" placeholder="e.g. _2024" value="${state.suffix}">
+      </div>
+    </div>
+    <div class="estimate-bar" id="estimateBar">estimating…</div>
+    <button class="generate-btn" id="genBtn">▶ Generate Wordlist</button>
+  `;
+}
+
+function chip(key, label, sample){
+  const on = state.charsets[key] ? 'on' : '';
+  return `<div class="chip ${on}" data-charset="${key}">
+      <span class="check"></span>
+      <span class="lab">${label}</span>
+      <span class="sample">${sample}</span>
+    </div>`;
+}
+
+function randomPanelHTML(){
+  return `
+    <h2>Random <em>— brute-force strings from a charset pool</em></h2>
+    <div class="desc">Uniform random sampling across the selected character pool and length range. Good for keyspace-style brute forcing when you have no OSINT on the target.</div>
+    <div class="charset-grid">
+      ${chip('lower','lowercase','a-z')}
+      ${chip('upper','uppercase','A-Z')}
+      ${chip('digits','digits','0-9')}
+      ${chip('special','special','!@#')}
+    </div>
+    <div class="field">
+      <label>Custom characters (added to the pool)</label>
+      <input type="text" id="customChars" placeholder="e.g. _-." value="${state.customChars}">
+    </div>
+    ${commonFieldsHTML()}
+  `;
+}
+
+function patternPanelHTML(){
+  return `
+    <h2>Pattern <em>— hashcat-style mask attack</em></h2>
+    <div class="desc">Define a mask and every combination in the keyspace gets expanded (or sampled once the keyspace exceeds the cap).</div>
+    <div class="field">
+      <label>Mask</label>
+      <input type="text" id="patternInput" placeholder="?u?l?l?l?d?d?d?d" value="${state.pattern}">
+    </div>
+    <div class="hint">
+      <code>?l</code> a-z &nbsp; <code>?u</code> A-Z &nbsp; <code>?d</code> 0-9 &nbsp; <code>?s</code> !@#$%^&amp;* &nbsp; <code>?a</code> alphanumeric &nbsp; anything else = literal char
+    </div>
+    <div class="row2">
+      <div class="field"><label>Prefix</label><input type="text" id="prefixInput" placeholder="e.g. admin_" value="${state.prefix}"></div>
+      <div class="field"><label>Suffix</label><input type="text" id="suffixInput" placeholder="e.g. _2024" value="${state.suffix}"></div>
+    </div>
+    <div class="estimate-bar" id="estimateBar">estimating…</div>
+    <div class="hint">Keyspace above ${MAX_RESULTS.toLocaleString()} is randomly sampled instead of fully expanded, to keep the tab responsive.</div>
+    <button class="generate-btn" id="genBtn">▶ Generate Wordlist</button>
+  `;
+}
+
+function mutatePanelHTML(){
+  const ops = state.mutateOps;
+  const tbtn = (key,label)=>`<div class="tbtn ${ops[key]?'on':''}" data-op="${key}">${label}</div>`;
+  return `
+    <h2>Mutate <em>— transform seed words into realistic variants</em></h2>
+    <div class="desc">Feed it OSINT-derived words (names, company, pet, DOB fragments) and stack transforms the way real users mangle passwords.</div>
+    <div class="field">
+      <label>Seed words (comma or newline separated)</label>
+      <textarea id="mutateWordsInput" placeholder="e.g. john, acmecorp, rocky2019">${state.mutateWords.join(', ')}</textarea>
+    </div>
+    <div class="toggle-grid">
+      ${tbtn('case','Aa/AA/aa')}
+      ${tbtn('l33t','L33t')}
+      ${tbtn('nums','+Nums')}
+      ${tbtn('years','+Years')}
+      ${tbtn('symbols','+Symbols')}
+      ${tbtn('reverse','Reverse')}
+      ${tbtn('double','Double')}
+    </div>
+    ${commonFieldsHTML()}
+  `;
+}
+
+function combinePanelHTML(){
+  const ops = state.combineOps;
+  const tbtn = (key,label)=>`<div class="tbtn ${ops[key]?'on':''}" data-cop="${key}">${label}</div>`;
+  return `
+    <h2>Combine <em>— chain seed words into multi-word candidates</em></h2>
+    <div class="desc">Real passwords are often "name+pet+year" style. Combine chains 2–3 seed words with separators, then optionally mutates the result.</div>
+    <div class="field">
+      <label>Base words (one per line)</label>
+      <textarea id="combineWordsInput" placeholder="john&#10;admin&#10;2024&#10;password">${state.combineWords}</textarea>
+    </div>
+    <div class="field">
+      <label>Chain length: <span id="depthLabel">${state.combineDepth}</span> word(s)</label>
+      <input type="range" id="depthSlider" min="1" max="3" value="${state.combineDepth}">
+      <div class="hint">Separators tried: none, <code>_</code>, <code>-</code>, <code>.</code></div>
+    </div>
+    <div class="field">
+      <label>Apply on top</label>
+      <div class="toggle-grid">
+        ${tbtn('case','Case')}
+        ${tbtn('nums','+Nums')}
+        ${tbtn('years','+Years')}
+        ${tbtn('symbols','+Symbols')}
+      </div>
+    </div>
+    ${commonFieldsHTML()}
+  `;
+}
+
+function scanPanelHTML(){
+  const simpleDesc = "Paste in any code, config, or website source. This checks it for common problems — like passwords left in the code, or ways a hacker could sneak in their own commands. Everything happens right here in your browser; nothing gets sent anywhere. Every result is a lead worth double-checking yourself, not a guaranteed problem.";
+  const techDesc = "Paste source code, a config/.env file, or any text file's contents. Runs 100% in your browser — nothing is uploaded. Covers secrets, injection/XSS/CSRF/tabnabbing sinks, and maps attack surface (forms, API calls, third-party domains). When a dangerous sink has an obvious user-input source right next to it, severity auto-escalates to Critical — everything else stays a lead to manually verify, not a confirmed vulnerability.";
+  return `
+    <h2>Code Review <em>— VAPT-minded static analysis</em></h2>
+    <div class="desc">${state.scanSimpleMode ? simpleDesc : techDesc}</div>
+    <div class="field">
+      <label>Source to scan</label>
+      <textarea id="scanInput" placeholder="Paste code, .env, config, or any file content here..." style="min-height:230px;"></textarea>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Filename (optional, shown in report)</label>
+        <input type="text" id="scanFilename" placeholder="e.g. config/database.js">
+      </div>
+      <div class="field">
+        <label>Min severity to show</label>
+        <select id="scanMinSeverity">
+          <option value="info">Info &amp; above (everything)</option>
+          <option value="low">Low &amp; above</option>
+          <option value="medium" selected>Medium &amp; above</option>
+          <option value="high">High &amp; above</option>
+          <option value="critical">Critical only</option>
+        </select>
+      </div>
+    </div>
+    <div class="chip ${state.scanSimpleMode ? 'on' : ''}" id="scanSimpleToggle" style="margin-bottom:12px;">
+      <span class="check"></span>
+      <span class="lab">Explain in simple English</span>
+      <span class="sample">plain words, no jargon</span>
+    </div>
+    <div class="estimate-bar" id="scanStatusBar">paste code and hit Scan</div>
+    <button class="generate-btn" id="scanBtn">▶ Scan Source</button>
+  `;
+}
+
+function sandboxPanelHTML(){
+  return `
+    <h2>Sandbox <em>— built-in CLI reference, no risk to your config</em></h2>
+    <div class="desc">Type <code>help</code> for the command list, or <code>&lt;mode&gt; -h</code> (e.g. <code>combine -h</code>) for exactly how a generator works — same as <code>man</code> pages on Kali.</div>
+    <div class="sbx-term" id="sbxTerm"></div>
+    <div class="sbx-inputrow">
+      <span class="sbx-prompt">root@kali:~#</span>
+      <input type="text" id="sbxInput" autocomplete="off" spellcheck="false" placeholder="try: combine -h">
+    </div>
+  `;
+}
+
+function presetsPanelHTML(){
+  const rows = Object.entries(PRESETS).map(([key,val])=>{
+    const on = state.presetSel.has(key) ? 'on' : '';
+    return `<div class="preset ${on}" data-preset="${key}">
+        <span class="name">${val.label}</span>
+        <span class="cnt">${val.words.length} words</span>
+      </div>`;
+  }).join('');
+  return `
+    <h2>Presets <em>— curated OSINT-style seed lists</em></h2>
+    <div class="desc">Stack these as a base, then switch to Mutate/Combine to mangle them further.</div>
+    <div class="preset-actions">
+      <button class="link-btn" id="selectAllBtn">Select all</button>
+      <button class="link-btn" id="clearAllBtn">Clear</button>
+    </div>
+    <div class="preset-list">${rows}</div>
+    ${commonFieldsHTML()}
+  `;
+}
+
+function bindPanelEvents(){
+  document.querySelectorAll('.chip[data-charset]').forEach(c=>{
+    c.addEventListener('click', ()=>{
+      const k = c.dataset.charset;
+      state.charsets[k] = !state.charsets[k];
+      c.classList.toggle('on');
+      updateEstimate();
+    });
+  });
+  const custom = document.getElementById('customChars');
+  if(custom) custom.addEventListener('input', e=>{ state.customChars = e.target.value; updateEstimate(); });
+
+  const patternInput = document.getElementById('patternInput');
+  if(patternInput) patternInput.addEventListener('input', e=>{ state.pattern = e.target.value; updateEstimate(); });
+
+  const mutateWordsInput = document.getElementById('mutateWordsInput');
+  if(mutateWordsInput) mutateWordsInput.addEventListener('input', e=>{
+    state.mutateWords = e.target.value.split(/[\n,]/).map(w=>w.trim()).filter(Boolean);
+    updateEstimate();
+  });
+
+  document.querySelectorAll('.tbtn[data-op]').forEach(t=>{
+    t.addEventListener('click', ()=>{
+      state.mutateOps[t.dataset.op] = !state.mutateOps[t.dataset.op];
+      t.classList.toggle('on');
+      updateEstimate();
+    });
+  });
+  document.querySelectorAll('.tbtn[data-cop]').forEach(t=>{
+    t.addEventListener('click', ()=>{
+      state.combineOps[t.dataset.cop] = !state.combineOps[t.dataset.cop];
+      t.classList.toggle('on');
+      updateEstimate();
+    });
+  });
+
+  const combineWordsInput = document.getElementById('combineWordsInput');
+  if(combineWordsInput) combineWordsInput.addEventListener('input', e=>{ state.combineWords = e.target.value; updateEstimate(); });
+
+  const depthSlider = document.getElementById('depthSlider');
+  if(depthSlider) depthSlider.addEventListener('input', e=>{
+    state.combineDepth = parseInt(e.target.value);
+    document.getElementById('depthLabel').textContent = state.combineDepth;
+    updateEstimate();
+  });
+
+  document.querySelectorAll('.preset[data-preset]').forEach(p=>{
+    p.addEventListener('click', ()=>{
+      const k = p.dataset.preset;
+      if(state.presetSel.has(k)) state.presetSel.delete(k); else state.presetSel.add(k);
+      p.classList.toggle('on');
+      updateEstimate();
+    });
+  });
+  const selAll = document.getElementById('selectAllBtn');
+  if(selAll) selAll.addEventListener('click', ()=>{ Object.keys(PRESETS).forEach(k=>state.presetSel.add(k)); renderPanel(); });
+  const clrAll = document.getElementById('clearAllBtn');
+  if(clrAll) clrAll.addEventListener('click', ()=>{ state.presetSel.clear(); renderPanel(); });
+
+  const minInput = document.getElementById('minLenInput');
+  const maxInput = document.getElementById('maxLenInput');
+  if(minInput && maxInput){
+    const wrap = minInput.parentElement;
+    const updateLen = ()=>{
+      let mn = parseInt(minInput.value)||1, mx = parseInt(maxInput.value)||1;
+      mn = Math.max(1, Math.min(40, mn));
+      mx = Math.max(1, Math.min(40, mx));
+      if(mn > mx) mx = mn;
+      state.minLen = mn; state.maxLen = mx;
+      wrap.classList.remove('bad');
+      updateEstimate();
+    };
+    minInput.addEventListener('input', updateLen);
+    maxInput.addEventListener('input', updateLen);
+    minInput.addEventListener('blur', ()=>{ minInput.value = state.minLen; });
+    maxInput.addEventListener('blur', ()=>{ maxInput.value = state.maxLen; });
+  }
+
+  const prefixInput = document.getElementById('prefixInput');
+  const suffixInput = document.getElementById('suffixInput');
+  if(prefixInput) prefixInput.addEventListener('input', e=>{ state.prefix = e.target.value; updateEstimate(); });
+  if(suffixInput) suffixInput.addEventListener('input', e=>{ state.suffix = e.target.value; updateEstimate(); });
+
+  const genBtn = document.getElementById('genBtn');
+  if(genBtn) genBtn.addEventListener('click', generate);
+}
+
+// ---------- code review / secret & flaw scanner ----------
+// Plain-English version of every finding's note, shown when "Explain Simply" is on.
+const SIMPLE_NOTES = {
+  'aws-key': "This looks like a real Amazon cloud password key. If it's real, someone could use it to access your cloud account and run up your bill. Change it right away.",
+  'priv-key': "This is a secret key file that should never be shown to anyone. If it's real, whoever has it can pretend to be your server. Get a new key made.",
+  'db-conn-creds': "This shows a database address plus its username and password, all in one line. Anyone who sees this can log straight into your database.",
+  'generic-secret': "Something here looks like a real password or secret key written directly in the code. Check if it's real — if so, move it somewhere safer and change it.",
+  'jwt-secret': "This is the secret word used to create login tokens. If someone gets it, they can make fake tokens and log in as anyone, even an admin.",
+  'eval-use': "This code lets the program run any text as if it were code. If a user can control that text, they can make the site do whatever they want.",
+  'new-function': "This builds and runs code from a text string, just like eval(). Same danger — if a user controls the text, they control the code.",
+  'sql-concat': "This builds a database question by gluing pieces of text together, including something that might come from a user. A user could sneak in their own database commands this way.",
+  'exec-call': "This code runs a command on the computer itself, like typing into a terminal. Make sure user-typed text never reaches this.",
+  'yaml-unsafe-load': "This reads a settings file in a way that can accidentally run hidden code inside it. Use the 'safe' version of this function instead.",
+  'pickle-loads': "This loads saved data in a format that can secretly contain and run code. Never load this kind of file if you don't fully trust where it came from.",
+  'innerhtml': "This puts content directly onto the page as raw HTML. If that content ever comes from a user, they could sneak in their own script.",
+  'dangerously-set': "Same idea as above, just in React — it inserts raw HTML into the page. Only dangerous if that HTML ever comes from something a user typed.",
+  'document-write': "An old-fashioned way to add content to a page. Same risk as innerHTML if user text ends up here.",
+  'cors-wildcard': "This tells browsers 'any website can ask this server for data.' That can let other websites steal information meant only for your users.",
+  'tls-verify-off': "This turns off the check that confirms you're really talking to the real server, not an imposter. Turning this off makes secure connections pointless.",
+  'weak-hash': "This uses an old, easy-to-crack way to scramble data (MD5 or SHA1). Fine for simple checksums, but never safe for passwords.",
+  'math-random-token': "This uses a 'random' number that computers can actually predict. Don't use it for anything that needs to stay secret, like login tokens.",
+  'debug-true': "Debug mode looks switched on. This often shows extra details (like error messages) that regular visitors shouldn't see.",
+  'csrf-disabled': "This turns off a protection that normally stops other websites from tricking a logged-in user into doing something without knowing it.",
+  'env-secret-line': "This line in a settings file has something that looks like a real password or key. Make sure this file never gets uploaded somewhere public like GitHub.",
+  'admin-string-check': "This checks if someone is an admin just by comparing a piece of text. If a user can change that text, they might be able to trick their way into admin access.",
+  'hardcoded-ip': "There's an actual computer address (IP) written directly in the code. This tells an outsider more about how things are set up than you'd probably like.",
+  'todo-comment': "Just a leftover note from a developer (like 'fix this later'). Not dangerous by itself, but worth a quick look in case it points to something real.",
+  'open-redirect': "This sends the user to a web address that could be controlled by them. An attacker could use this to send people to a fake look-alike site.",
+  'postmessage-wildcard': "This sends a message to any window or frame, no matter who owns it. That message could be picked up by an attacker's hidden frame.",
+  'mixed-content': "This loads a file over an old, unprotected connection (http instead of https). Someone in between could tamper with it on the way.",
+  'sensitive-storage': "This saves something that looks like a password or login token in the browser's storage. Any unrelated bug that runs a script on the page can steal it.",
+  'console-log-sensitive': "This prints something private-looking (a password or token) to the browser's console. It could end up somewhere it shouldn't, like a screenshot or log file.",
+  'smtpjs-detected': "This page can send emails straight from the browser. That usually needs a hidden key to work — if someone finds that key, they could send emails pretending to be this site.",
+  'google-api-key': "This is a Google/Firebase access key. Check the Google Cloud settings to see if it's limited to certain uses — if not, someone could use it and run up your bill.",
+  'github-token': "This is a real GitHub login key. Whoever has it may be able to see or change private code. Turn it off (revoke it) right away.",
+  'slack-token': "This is a real Slack login key. Someone with it could read private messages or post pretending to be part of the team. Turn it off immediately.",
+  'slack-webhook': "Anyone who has this web address can post a message into your Slack channel, pretending to be your app. Get a new one.",
+  'stripe-live-key': "This is a real Stripe payment key. Whoever has it could see customer payments or even create charges. Change it immediately.",
+  'mailgun-key': "This is a real email-sending key. Someone with it could send email pretending to be you, or read your email logs. Change it.",
+  'jwt-embedded': "This is a login token. It can be decoded (not just random letters) — inside are hidden details like a user's ID or role. Worth checking what it reveals.",
+  'sourcemap-reference': "This points to a file that can rebuild the full, readable original code (before it was compressed). If that file is public, it hands over your source code.",
+  'missing-sri': "This script or style file loads from outside the site without a safety checksum. If that outside file is ever hacked, this page would quietly load the hacked version.",
+  'comment-internal-info': "A note left in the code accidentally tells outsiders something about how the site is built internally, like file names or setup details.",
+  'nonstandard-proxy-path': "There's an unusually-named web address here (starts with ~). It's often a custom shortcut set up by developers — worth checking what it actually does.",
+  'reverse-tabnabbing': "This link opens in a new tab, but the new page can secretly control the original tab and redirect it somewhere else — a phishing trick.",
+  'form-missing-csrf': "This form doesn't obviously include the hidden 'proof' field that stops other sites from submitting it on a user's behalf without them knowing.",
+  'password-autocomplete': "This password box doesn't clearly say how the browser's autofill should treat it. Small thing, but worth setting on purpose.",
+  'postmessage-no-origin-check': "This code listens for messages from other browser tabs/windows but doesn't check who sent them. Any window, even a malicious one, could send it fake data.",
+  'cookie-insecure-flags': "This saves a cookie without telling the browser to keep it extra safe (only send it over secure connections, and don't send it to other sites).",
+  'window-open-no-opener': "This opens a new tab, and the new page could reach back and control the original tab — same trick as the link version of this issue.",
+  'attack-surface-form': "This isn't a problem — it's a map. It shows a form on the page: where it sends data and what fields it asks for. A starting point for testing.",
+  'attack-surface-api': "This isn't a problem — it's a map. It shows a web address the page's code talks to in the background. A starting point for testing.",
+  'attack-surface-domains': "This just lists every outside website this page connects to. If any one of them ever gets hacked, it could affect this page too.",
+  'no-csp-meta': "This page's HTML doesn't show a security rule called CSP. That doesn't mean it's missing — it might be set separately by the server. You'd need to check directly to be sure.",
+};
+
+const SIMPLE_TITLES = {
+  'aws-key': "Real Amazon Cloud Password Found",
+  'priv-key': "Secret Server Key Found in the Code",
+  'db-conn-creds': "Database Password Found in the Code",
+  'generic-secret': "Possible Password or Secret Found",
+  'jwt-secret': "Login-Token Secret Found",
+  'eval-use': "Code Can Run Any Text as a Program",
+  'new-function': "Code Can Build and Run Text as a Program",
+  'sql-concat': "Database Question Built from User Text (Risky)",
+  'exec-call': "Code Can Run System Commands",
+  'yaml-unsafe-load': "Settings File Loaded in an Unsafe Way",
+  'pickle-loads': "Saved Data Loaded in an Unsafe Way",
+  'innerhtml': "Page Content Inserted as Raw HTML",
+  'dangerously-set': "Raw HTML Inserted Into the Page (React)",
+  'document-write': "Old-Style Raw HTML Insertion",
+  'cors-wildcard': "Any Website Allowed to Read This Data",
+  'tls-verify-off': "Secure-Connection Check Turned Off",
+  'weak-hash': "Old, Crackable Scrambling Method Used",
+  'math-random-token': "Predictable 'Random' Number Used",
+  'debug-true': "Debug Mode Looks Turned On",
+  'csrf-disabled': "Cross-Site Trick Protection Turned Off",
+  'env-secret-line': "Password-Looking Line in Settings File",
+  'admin-string-check': "Admin Check Based on Simple Text Match",
+  'hardcoded-ip': "Computer Address (IP) Written in the Code",
+  'todo-comment': "Developer's Leftover Note Found",
+  'open-redirect': "Page Can Redirect to Any Address",
+  'postmessage-wildcard': "Message Sent to Any Window (No Restriction)",
+  'mixed-content': "Insecure (http) File Loaded",
+  'sensitive-storage': "Password/Token Saved in Browser Storage",
+  'console-log-sensitive': "Password/Token Printed to Browser Console",
+  'smtpjs-detected': "Site Can Send Email from the Browser",
+  'google-api-key': "Google/Firebase Key Found",
+  'github-token': "GitHub Login Key Found",
+  'slack-token': "Slack Login Key Found",
+  'slack-webhook': "Slack Posting Address Found",
+  'stripe-live-key': "Stripe Payment Key Found",
+  'mailgun-key': "Email-Sending Key Found",
+  'jwt-embedded': "Login Token Found (Can Be Decoded)",
+  'sourcemap-reference': "Link to Full Original Source Code Found",
+  'missing-sri': "Outside File Loaded Without a Safety Check",
+  'comment-internal-info': "Developer Note Reveals Internal Details",
+  'nonstandard-proxy-path': "Unusual Website Address Found",
+  'reverse-tabnabbing': "New-Tab Link Can Hijack the Old Tab",
+  'form-missing-csrf': "Form Missing an Anti-Trick Field",
+  'password-autocomplete': "Password Box Autofill Not Set on Purpose",
+  'postmessage-no-origin-check': "Message Listener Doesn't Check Who's Talking",
+  'cookie-insecure-flags': "Cookie Saved Without Extra Safety Settings",
+  'window-open-no-opener': "New Tab Can Control the Old Tab",
+  'attack-surface-form': "Just a Map: Form Found on the Page",
+  'attack-surface-api': "Just a Map: Background Web Address Found",
+  'attack-surface-domains': "Just a Map: Outside Websites This Page Talks To",
+  'no-csp-meta': "Can't Tell From This Page Alone If Security Rules Are Set",
+};
+
+const SIMPLE_CATEGORIES = {
+  'Secrets': 'Exposed Password/Key',
+  'JWT / Tokens': 'Login Token Issue',
+  'Injection': 'Code Injection Risk',
+  'Injection / RCE': 'Server Takeover Risk',
+  'XSS': 'Script Injection Risk',
+  'CORS / Headers': 'Website Sharing Rules',
+  'Crypto / Transport': 'Encryption Issue',
+  'Crypto': 'Encryption Issue',
+  'Config': 'Settings Issue',
+  'Config / Secrets': 'Settings File Leak',
+  'CSRF': 'Form Trickery Risk',
+  'Info': 'Just Info',
+  'Access Control': 'Permission/Redirect Issue',
+  'Sensitive Data Exposure': 'Data Leak Risk',
+  'Supply Chain': 'Third-Party File Risk',
+  'Info Disclosure': 'Info Leak',
+  'Session Handling': 'Cookie/Login Issue',
+  'Recon': 'Just Mapping the Site',
+};
+
+const SCAN_RULES = [
+  {id:'aws-key', title:'Hardcoded AWS Access Key', category:'Secrets', severity:'critical', re:/AKIA[0-9A-Z]{16}/g, note:'Rotate this key immediately and move credentials to environment variables / a secrets manager.'},
+  {id:'priv-key', title:'Embedded Private Key', category:'Secrets', severity:'critical', re:/-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----/g, note:'Private keys must never live in source control. Revoke and reissue this key pair.'},
+  {id:'db-conn-creds', title:'Database Connection String With Credentials', category:'Secrets', severity:'critical', re:/(?:mongodb|postgres(?:ql)?|mysql):\/\/[^:\s@'"]+:[^@\s'"]+@/gi, note:'Move credentials out of the connection string into env vars; rotate the exposed password.'},
+  {id:'generic-secret', title:'Hardcoded Secret / Password Assignment', category:'Secrets', severity:'high', re:/\b(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token)\s*[:=]\s*["'][^"'\n]{6,}["']/gi, note:'Confirm this is not a live credential. If real, move it to env vars / a secrets manager and rotate it.'},
+  {id:'jwt-secret', title:'Hardcoded JWT Signing Secret', category:'JWT / Tokens', severity:'high', re:/jwt[_-]?secret\s*[:=]\s*["'][^"'\n]+["']/gi, note:'A weak or hardcoded JWT secret allows token forgery. Use a long random secret from config.'},
+  {id:'eval-use', title:'Use of eval()', category:'Injection', severity:'high', re:/\beval\s*\(/g, note:'eval() on untrusted input enables code injection. Replace with safe parsing (e.g. JSON.parse).'},
+  {id:'new-function', title:'Dynamic Function Constructor', category:'Injection', severity:'high', re:/new\s+Function\s*\(/g, note:'Behaves like eval() — avoid building functions from strings that touch user input.'},
+  {id:'sql-concat', title:'Possible SQL Injection via String Concatenation', category:'Injection', severity:'high', re:/(?:SELECT|INSERT|UPDATE|DELETE)[^;\n]{0,200}["'`]\s*\+\s*\w+/gi, note:'Use parameterized queries / prepared statements instead of concatenating input into SQL.'},
+  {id:'exec-call', title:'Shell Command Execution Call', category:'Injection / RCE', severity:'medium', re:/\b(?:child_process\.)?(?:exec|execSync|spawn|spawnSync)\s*\(/g, note:'Confirm no user-controlled input reaches this call unsanitized — a common RCE path.'},
+  {id:'yaml-unsafe-load', title:'Unsafe YAML Deserialization', category:'Injection', severity:'high', re:/yaml\.load\s*\(/g, note:'yaml.load() without SafeLoader can execute arbitrary code from crafted YAML input.'},
+  {id:'pickle-loads', title:'Unsafe Pickle Deserialization', category:'Injection', severity:'high', re:/pickle\.loads?\s*\(/g, note:'Deserializing untrusted data with pickle can lead to remote code execution.'},
+  {id:'innerhtml', title:'innerHTML Assignment (unconfirmed — verify input source)', category:'XSS', severity:'info', re:/\.innerHTML\s*=/g, note:'Presence alone is not a confirmed vulnerability. Trace what value is assigned: if it ever contains user-controlled or attacker-influenced data, sanitize it (e.g. DOMPurify) or use textContent instead. If the value is always static/developer-controlled, this is not exploitable.'},
+  {id:'dangerously-set', title:'dangerouslySetInnerHTML Usage (unconfirmed — verify input source)', category:'XSS', severity:'info', re:/dangerouslySetInnerHTML/g, note:'Presence alone does not establish an XSS vulnerability — React/Next.js also uses this internally for static, developer-controlled HTML (e.g. font-loading scriptLoader config). Confirm whether attacker-controlled or user-supplied input reaches this specific occurrence before treating it as exploitable; if not, this is an informational code-quality note only.'},
+  {id:'document-write', title:'document.write() Usage (unconfirmed — verify input source)', category:'XSS', severity:'info', re:/document\.write\s*\(/g, note:'Legacy sink that is easy to misuse with untrusted input, but presence alone is not proof of exploitability — confirm the written value is not attacker-influenced before escalating.'},
+  {id:'cors-wildcard', title:'Wildcard CORS Origin', category:'CORS / Headers', severity:'medium', re:/Access-Control-Allow-Origin["']?\s*[:=]\s*["']\*["']|origin\s*:\s*["']\*["']/gi, note:'A wildcard origin combined with credentialed requests can leak authenticated data cross-origin.'},
+  {id:'tls-verify-off', title:'TLS Certificate Verification Disabled', category:'Crypto / Transport', severity:'high', re:/rejectUnauthorized\s*[:=]\s*false|verify\s*=\s*False|NODE_TLS_REJECT_UNAUTHORIZED\s*=\s*['"]?0/gi, note:'Disabling certificate validation exposes the app to man-in-the-middle attacks.'},
+  {id:'weak-hash', title:'Weak Hash Algorithm Referenced (MD5/SHA1)', category:'Crypto', severity:'low', re:/\b(?:md5|sha1)\b/gi, note:'Fine for checksums, unsafe for passwords or signatures — confirm the use case here.'},
+  {id:'math-random-token', title:'Math.random() Present', category:'Crypto', severity:'medium', re:/Math\.random\(\)/g, note:'Not cryptographically secure — use crypto.randomBytes()/crypto.getRandomValues() for tokens or sessions.'},
+  {id:'debug-true', title:'Debug Mode Enabled', category:'Config', severity:'low', re:/\bdebug\s*[:=]\s*true\b/gi, note:'Ensure debug mode is off in production — it often leaks stack traces and internals.'},
+  {id:'csrf-disabled', title:'CSRF Protection Disabled', category:'CSRF', severity:'high', re:/csrf\s*[:=]\s*false/gi, note:'Confirm this route genuinely needs CSRF exemption; otherwise re-enable protection.'},
+  {id:'env-secret-line', title:'Environment Variable Holding a Secret', category:'Config / Secrets', severity:'medium', re:/^[A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|KEY)[A-Z0-9_]*\s*=\s*.+$/gm, note:'Make sure this .env/config file is gitignored and never committed with real values.'},
+  {id:'admin-string-check', title:'Role Check Against Literal String', category:'Access Control', severity:'info', re:/(?:role|username|user)\s*===?\s*["']admin["']/gi, note:'String-based role checks are easy to bypass — confirm this cannot be spoofed client-side.'},
+  {id:'hardcoded-ip', title:'Hardcoded IP Address', category:'Info', severity:'info', re:/\b(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\b/g, note:'Hardcoded internal/external IPs can leak infrastructure details — confirm this is intentional.'},
+  {id:'todo-comment', title:'TODO / FIXME / Security Note Left In Code', category:'Info', severity:'info', re:/\b(?:TODO|FIXME|HACK|XXX)\b[:\s]/g, note:'Not a vulnerability by itself, but worth reviewing — often flags a known-unfixed issue.'},
+  {id:'open-redirect', title:'Possible Open Redirect Using User-Controlled Input', category:'Access Control', severity:'high', re:/(?:location\.href|window\.location(?:\.href)?|location\.assign|location\.replace|res\.redirect)\s*(?:=|\()\s*(?:req\.|request\.|params\.|query\.|location\.search|location\.hash)/gi, note:'A redirect target built from user-controlled input can send victims to attacker-controlled sites (phishing) or bypass allowlist logic. Validate against a fixed allowlist.'},
+  {id:'postmessage-wildcard', title:'postMessage() With Wildcard Target Origin', category:'XSS', severity:'medium', re:/\.postMessage\s*\([^)]*,\s*["']\*["']/g, note:'A wildcard target origin means any frame — including a malicious one — can receive this message. Specify the exact expected origin.'},
+  {id:'mixed-content', title:'Insecure HTTP Resource on the Page', category:'Crypto / Transport', severity:'low', re:/(?:src|href)=["']http:\/\/[^"']+["']/gi, note:'Loading a resource over plain HTTP allows network-level tampering/injection even if the page itself is served over HTTPS.'},
+  {id:'sensitive-storage', title:'Sensitive-Looking Data Stored in localStorage/sessionStorage', category:'Sensitive Data Exposure', severity:'medium', re:/(?:localStorage|sessionStorage)\.setItem\(\s*["'][^"']*(?:token|jwt|password|secret|session)[^"']*["']/gi, note:'Unlike an HttpOnly cookie, localStorage/sessionStorage is readable by any script on the page — a single XSS anywhere steals this value.'},
+  {id:'console-log-sensitive', title:'Sensitive-Looking Value Passed to console.log', category:'Sensitive Data Exposure', severity:'low', re:/console\.(?:log|debug|info)\([^)]*(?:password|token|secret|apikey|api_key)[^)]*\)/gi, note:'Values logged to the console can end up in browser devtools, crash reports, or log aggregation pipelines. Avoid logging secrets.'},
+  {id:'smtpjs-detected', title:'Client-Side Email Library Detected (SMTP.js / smtpjs.com)', category:'Sensitive Data Exposure', severity:'medium', re:/smtpjs\.com|\bEmail\.send\s*\(/gi, note:'SMTP.js sends email directly from the browser via a relay (commonly Elastic Email), which requires a "SecureToken"/API key embedded somewhere in the site\'s JavaScript to function. That token is usually extractable and, once found, lets an attacker relay spam or phishing email through the site\'s account. Pull apart the compiled JS bundle and search for Email.send( or a token string near it.'},
+  {id:'google-api-key', title:'Google/Firebase API Key Exposed', category:'Secrets', severity:'medium', re:/AIza[0-9A-Za-z_-]{35}/g, note:'Google API keys of this shape can be restricted (by referrer/API/IP) or unrestricted. Check the Google Cloud Console API restrictions — an unrestricted key can be abused for billing (quota abuse) on Maps/Places/etc, or to call Firebase Auth/Firestore if the associated project rules are weak.'},
+  {id:'github-token', title:'GitHub Access Token Exposed', category:'Secrets', severity:'critical', re:/\bgh[pousr]_[A-Za-z0-9]{36,}\b/g, note:'A live GitHub token (personal access token / OAuth / app token) grants repo/org access depending on scope. Revoke immediately and check GitHub audit log for unauthorized use.'},
+  {id:'slack-token', title:'Slack Token Exposed', category:'Secrets', severity:'critical', re:/\bxox[baprs]-[0-9A-Za-z-]{10,}\b/g, note:'A live Slack token can read/post messages, list users, and exfiltrate workspace data depending on scope. Revoke via Slack app management immediately.'},
+  {id:'slack-webhook', title:'Slack Incoming Webhook URL Exposed', category:'Secrets', severity:'high', re:/https:\/\/hooks\.slack\.com\/services\/T[0-9A-Za-z]+\/B[0-9A-Za-z]+\/[0-9A-Za-z]+/g, note:'Anyone with this URL can post arbitrary messages into the target Slack channel (spam/phishing/social engineering vector). Regenerate the webhook.'},
+  {id:'stripe-live-key', title:'Stripe Live Secret Key Exposed', category:'Secrets', severity:'critical', re:/\bsk_live_[0-9A-Za-z]{20,}\b/g, note:'A live Stripe secret key allows creating charges, refunds, and reading customer/payment data. Roll the key immediately in the Stripe dashboard.'},
+  {id:'mailgun-key', title:'Mailgun API Key Exposed', category:'Secrets', severity:'high', re:/\bkey-[0-9a-f]{32}\b/gi, note:'A Mailgun API key can be used to send email as the associated domain (phishing/spam) or read message logs. Rotate it in the Mailgun control panel.'},
+  {id:'jwt-embedded', title:'JWT-Shaped Token Embedded in Source', category:'JWT / Tokens', severity:'low', re:/\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g, note:'Base64-decode the middle segment (the payload) — JWTs frequently leak user IDs, roles/permissions, or internal identifiers in their claims even when the signature itself cannot be forged. If this is a live session token, treat it as sensitive; if it\'s a fixture/example token, ignore.'},
+  {id:'sourcemap-reference', title:'Source Map Reference Found', category:'Info', severity:'low', re:/\/\/[#@]\s*sourceMappingURL=([^\s*]+)/g, note:'If the referenced .map file is publicly reachable, it reconstructs original (unminified) source — variable names, comments, file structure, sometimes internal logic. Try fetching it directly to confirm exposure.'},
+];
+
+const SEV_RANK = {critical:4, high:3, medium:2, low:1, info:0};
+
+// Structural checks that need more than a single regex (tag-aware, comment-aware).
+// Each returns raw {index, length} hits; scanSource turns those into findings
+// using the same snippet/line logic as the regex-based SCAN_RULES.
+const CUSTOM_CHECKS = [
+  {
+    id: 'missing-sri',
+    title: 'Script/Stylesheet Loaded Without Subresource Integrity (SRI)',
+    category: 'Supply Chain',
+    severity: 'low',
+    note: 'If this CDN or build pipeline is ever compromised, the browser has no way to detect a tampered file. Add integrity="sha384-..." + crossorigin.',
+    run(text){
+      const hits = [];
+      const tagRe = /<(script|link)\b[^>]*>/gi;
+      let m;
+      while((m = tagRe.exec(text)) !== null){
+        const tag = m[0];
+        const isScriptWithSrc = /^<script\b/i.test(tag) && /\bsrc=["'][^"']+\.js["']/i.test(tag);
+        const isStylesheet = /^<link\b/i.test(tag) && /\brel=["']stylesheet["']/i.test(tag) && /\bhref=["'][^"']+["']/i.test(tag);
+        const isModulePreload = /^<link\b/i.test(tag) && /\brel=["']modulepreload["']/i.test(tag);
+        if((isScriptWithSrc || isStylesheet || isModulePreload) && !/\bintegrity=/i.test(tag)){
+          // Same-origin/relative assets (built by this app itself) are a
+          // best-practice nicety; cross-origin CDN assets are a real
+          // supply-chain exposure (a compromised CDN can silently swap the file).
+          const urlMatch = tag.match(/\b(?:src|href)=["']([^"']+)["']/i);
+          const url = urlMatch ? urlMatch[1] : '';
+          const isFirstParty = url.startsWith('/') && !url.startsWith('//');
+          hits.push({index: m.index, length: tag.length, severity: isFirstParty ? 'info' : 'low'});
+        }
+      }
+      return hits;
+    }
+  },
+  {
+    id: 'comment-internal-info',
+    title: 'HTML Comment Leaks Internal Implementation Detail',
+    category: 'Info Disclosure',
+    severity: 'info',
+    note: 'Comments referencing source paths, config files, or deployment internals hand a recon-er a head start. Strip these from production builds.',
+    run(text){
+      const hits = [];
+      const commentRe = /<!--([\s\S]*?)-->/g;
+      const leakPattern = /\.(tsx|jsx|ts|py|php|rb|go|env)\b|(^|[^\w])src\/|public\/_headers|see\s+\S+\.(tsx|jsx|ts|js)|config\/|internal\b|backend\b|database\b|TODO|FIXME/i;
+      let m;
+      while((m = commentRe.exec(text)) !== null){
+        if(leakPattern.test(m[1])) hits.push({index: m.index, length: m[0].length});
+      }
+      return hits;
+    }
+  },
+  {
+    id: 'nonstandard-proxy-path',
+    title: 'Non-Standard / Tilde-Prefixed Path Referenced',
+    category: 'Info',
+    severity: 'low',
+    note: 'Unusual path naming (e.g. /~something) often signals a custom proxy or rewrite rule — worth testing directly (with authorization) for open-proxy or SSRF-style behavior.',
+    run(text){
+      const hits = [];
+      const re = /(?:src|href|data-[\w-]*url)=["'](\/~[^"']+)["']/gi;
+      let m;
+      while((m = re.exec(text)) !== null) hits.push({index: m.index, length: m[0].length});
+      return hits;
+    }
+  },
+  {
+    id: 'reverse-tabnabbing',
+    title: 'target="_blank" Link Without rel="noopener"',
+    category: 'Access Control',
+    severity: 'low',
+    note: 'A target="_blank" link without rel="noopener noreferrer" lets the opened page run window.opener.location = "…" and silently redirect the original tab (reverse tabnabbing).',
+    run(text){
+      const hits = [];
+      const tagRe = /<a\b[^>]*\btarget=["']_blank["'][^>]*>/gi;
+      let m;
+      while((m = tagRe.exec(text)) !== null){
+        if(!/\brel=["'][^"']*(?:noopener|noreferrer)[^"']*["']/i.test(m[0])){
+          hits.push({index: m.index, length: m[0].length});
+        }
+      }
+      return hits;
+    }
+  },
+  {
+    id: 'form-missing-csrf',
+    title: 'POST Form Without an Obvious CSRF Token Field',
+    category: 'CSRF',
+    severity: 'low',
+    note: 'No csrf/_token/authenticity_token-style hidden field was spotted near this form. Confirm CSRF protection is enforced server-side (header-based tokens, SameSite cookies, etc. would not show up here).',
+    run(text){
+      const hits = [];
+      const formRe = /<form\b[^>]*\bmethod=["']post["'][^>]*>/gi;
+      let m;
+      while((m = formRe.exec(text)) !== null){
+        const closeIdx = text.indexOf('</form>', m.index);
+        const window_ = text.slice(m.index, closeIdx === -1 ? m.index + 1500 : Math.min(closeIdx, m.index + 3000));
+        if(!/name=["'][^"']*(?:csrf|_token|authenticity_token)[^"']*["']/i.test(window_)){
+          hits.push({index: m.index, length: m[0].length});
+        }
+      }
+      return hits;
+    }
+  },
+  {
+    id: 'password-autocomplete',
+    title: 'Password Field Without Explicit autocomplete Attribute',
+    category: 'Config',
+    severity: 'info',
+    note: 'Browsers/password managers may cache or suggest-fill the value. Set autocomplete="current-password"/"new-password" (or "off") deliberately rather than leaving it to browser defaults.',
+    run(text){
+      const hits = [];
+      const tagRe = /<input\b[^>]*\btype=["']password["'][^>]*>/gi;
+      let m;
+      while((m = tagRe.exec(text)) !== null){
+        if(!/\bautocomplete=/i.test(m[0])) hits.push({index: m.index, length: m[0].length});
+      }
+      return hits;
+    }
+  },
+  {
+    id: 'postmessage-no-origin-check',
+    title: 'message Event Listener Without Origin Validation',
+    category: 'XSS',
+    severity: 'medium',
+    note: 'No ".origin" check was found near this listener. Any window/iframe on the page (including an attacker-controlled one) can send this handler a message unless the origin is validated.',
+    run(text){
+      const hits = [];
+      const re = /addEventListener\(\s*["']message["']/gi;
+      let m;
+      while((m = re.exec(text)) !== null){
+        const windowText = text.slice(m.index, Math.min(text.length, m.index + 400));
+        if(!/\.origin\b/.test(windowText)) hits.push({index: m.index, length: m[0].length});
+      }
+      return hits;
+    }
+  },
+  {
+    id: 'cookie-insecure-flags',
+    title: 'document.cookie Set Without Secure/SameSite Flags',
+    category: 'Session Handling',
+    severity: 'low',
+    note: 'No "Secure" or "SameSite" attribute was spotted in this cookie string. Without Secure the cookie can be sent over plain HTTP; without SameSite it is more exposed to CSRF. Add both explicitly (e.g. "...; Secure; SameSite=Strict").',
+    run(text){
+      const hits = [];
+      const re = /document\.cookie\s*=\s*["'][^"']*["']/g;
+      let m;
+      while((m = re.exec(text)) !== null){
+        if(!/\b(?:Secure|SameSite)\b/i.test(m[0])) hits.push({index: m.index, length: m[0].length});
+      }
+      return hits;
+    }
+  },
+  {
+    id: 'window-open-no-opener',
+    title: 'window.open() Without noopener',
+    category: 'Access Control',
+    severity: 'low',
+    note: 'The opened page can reach back via window.opener and redirect the original tab (reverse tabnabbing) unless "noopener" is passed in the window features string.',
+    run(text){
+      const hits = [];
+      const re = /window\.open\s*\([^)]*\)/gi;
+      let m;
+      while((m = re.exec(text)) !== null){
+        if(!/noopener/i.test(m[0])) hits.push({index: m.index, length: m[0].length});
+      }
+      return hits;
+    }
+  },
+  {
+    id: 'attack-surface-form',
+    title: 'Attack Surface: Form Endpoint',
+    category: 'Recon',
+    severity: 'info',
+    run(text){
+      const hits = [];
+      const formRe = /<form\b[^>]*>/gi;
+      let m;
+      while((m = formRe.exec(text)) !== null){
+        const tag = m[0];
+        const action = (tag.match(/\baction=["']([^"']*)["']/i) || [,'(current page)'])[1];
+        const method = (tag.match(/\bmethod=["']([^"']*)["']/i) || [,'GET'])[1].toUpperCase();
+        const closeIdx = text.indexOf('</form>', m.index);
+        const body = text.slice(m.index, closeIdx === -1 ? m.index + 2000 : Math.min(closeIdx, m.index + 4000));
+        const names = [...body.matchAll(/\bname=["']([^"']+)["']/gi)].map(x=>x[1]).slice(0,12);
+        hits.push({
+          index: m.index, length: tag.length,
+          note: `${method} → ${action}${names.length ? ' | fields: '+names.join(', ') : ''} — manually test this endpoint for injection, auth, and business-logic flaws.`
+        });
+      }
+      return hits;
+    }
+  },
+  {
+    id: 'attack-surface-api',
+    title: 'Attack Surface: API Call Referenced',
+    category: 'Recon',
+    severity: 'info',
+    run(text){
+      const hits = [];
+      const re = /(?:fetch|axios\.(?:get|post|put|delete|patch))\s*\(\s*[`'"]([^`'"]+)[`'"]/gi;
+      let m;
+      while((m = re.exec(text)) !== null){
+        hits.push({index: m.index, length: m[0].length, note: `Endpoint: ${m[1]} — check auth requirements, IDOR (object-id params), and rate limiting on this call.`});
+      }
+      return hits;
+    }
+  },
+];
+
+// Post-scan: collect all distinct external/third-party origins referenced by
+// src=/href= — a one-line recon summary of who this page talks to.
+function collectExternalDomains(text){
+  const domains = new Set();
+  const re = /(?:src|href)=["']https?:\/\/([^\/"']+)/gi;
+  let m;
+  while((m = re.exec(text)) !== null) domains.add(m[1]);
+  return [...domains];
+}
+
+function lineNumberAt(text, index){
+  return text.slice(0, index).split('\n').length;
+}
+
+function extractSnippet(text, index, length){
+  const CTX = 70;
+  const localStart = Math.max(0, index - CTX);
+  const localEnd = Math.min(text.length, index + length + CTX);
+  let snippet = text.slice(localStart, localEnd).replace(/\s+/g, ' ').trim();
+  if(localStart > 0) snippet = '…' + snippet;
+  if(localEnd < text.length) snippet = snippet + '…';
+  return snippet.slice(0,220);
+}
+
+const TAINT_SINK_IDS = new Set(['eval-use','exec-call','sql-concat','innerhtml','new-function','yaml-unsafe-load','pickle-loads','open-redirect','dangerously-set','document-write']);
+const TAINT_SOURCE_RE = /\b(?:req\.(?:query|body|params|headers)|request\.(?:GET|POST|args|form)|params\[|query\[|location\.(?:search|hash)|\$_(?:GET|POST|REQUEST|COOKIE)|input\(\)|process\.argv|e\.data\b|evt\.data\b|event\.data\b)/;
+
+function scanSource(text){
+  const findings = [];
+
+  for(const rule of SCAN_RULES){
+    const flags = rule.re.flags.includes('g') ? rule.re.flags : rule.re.flags + 'g';
+    const re = new RegExp(rule.re.source, flags);
+    let m, guard = 0;
+    while((m = re.exec(text)) !== null && guard < 300){
+      guard++;
+      let severity = rule.severity;
+      let note = rule.note;
+
+      if(rule.id === 'hardcoded-ip'){
+        const guardCtxStart = Math.max(0, m.index - 200);
+        const localCtx = text.slice(guardCtxStart, m.index + m[0].length);
+        if(/<path[^>]*\bd\s*=|<svg[^>]*viewBox|\bd=["']\s*[MmLlHhVvCcSsQqTtAaZz]/.test(localCtx)){
+          if(m[0].length === 0) re.lastIndex++;
+          continue; // SVG path/viewBox coordinates, not a real IP — skip
+        }
+        const octets = m[0].split('.').map(Number);
+        const isPrivate = octets[0]===10 || (octets[0]===172 && octets[1]>=16 && octets[1]<=31) || (octets[0]===192 && octets[1]===168) || octets[0]===127;
+        if(isPrivate){
+          severity = 'low';
+          note = 'This is a private/internal-range address (RFC1918 or loopback) — its presence in client-facing source can leak internal network topology (VPN ranges, internal service hosts, dev boxes). Confirm it isn\'t meant to stay internal.';
+        }
+      }
+
+      // Taint correlation: if a known dangerous sink has an obvious
+      // user-input source in its immediate vicinity, this stops being a
+      // "maybe" and becomes something to fix now — escalate accordingly.
+      if(TAINT_SINK_IDS.has(rule.id)){
+        const taintCtx = text.slice(Math.max(0, m.index - 160), Math.min(text.length, m.index + m[0].length + 40));
+        if(TAINT_SOURCE_RE.test(taintCtx)){
+          severity = 'critical';
+          note = note + ' Heuristic match: user-controlled input appears to flow directly into this sink — treat as confirmed until proven otherwise.';
+        }
+      }
+
+      findings.push({
+        rule: rule.id, title: rule.title, category: rule.category, severity,
+        line: lineNumberAt(text, m.index), snippet: extractSnippet(text, m.index, m[0].length),
+        note, simpleNote: SIMPLE_NOTES[rule.id] || note, charIndex: m.index
+      });
+      if(m[0].length === 0) re.lastIndex++;
+    }
+  }
+
+  for(const check of CUSTOM_CHECKS){
+    let hits = [];
+    try { hits = check.run(text) || []; } catch(e){ hits = []; }
+    let count = 0;
+    for(const h of hits){
+      if(count++ >= 300) break;
+      findings.push({
+        rule: check.id, title: check.title, category: check.category, severity: h.severity || check.severity,
+        line: lineNumberAt(text, h.index), snippet: extractSnippet(text, h.index, h.length),
+        note: h.note || check.note, simpleNote: SIMPLE_NOTES[check.id] || h.note || check.note, charIndex: h.index
+      });
+    }
+  }
+
+  // Recon summary: who does this page actually talk to?
+  const domains = collectExternalDomains(text);
+  if(domains.length){
+    findings.push({
+      rule: 'attack-surface-domains', title: 'Attack Surface: Third-Party Domains Contacted', category: 'Recon', severity: 'info',
+      line: 1, snippet: domains.slice(0,20).join(', ') + (domains.length>20 ? ` …+${domains.length-20} more` : ''),
+      note: 'Each of these is a trust boundary — a compromise of any one can affect this page (supply-chain risk). Cross-check against an allowlist if one exists.',
+      simpleNote: SIMPLE_NOTES['attack-surface-domains'], charIndex: -1
+    });
+  }
+
+  if(!/<meta[^>]+http-equiv=["']Content-Security-Policy["']/i.test(text)){
+    findings.push({
+      rule: 'no-csp-meta', title: 'Security Headers Cannot Be Confirmed From HTML Alone (CSP, HSTS, X-Frame-Options, etc.)', category: 'Config', severity: 'info',
+      line: 1, snippet: '(no <meta http-equiv="Content-Security-Policy"> tag found in the provided HTML — and CSP/HSTS/X-Frame-Options/X-Content-Type-Options/Referrer-Policy are usually set as HTTP response headers anyway, invisible to a source-code-only scan)',
+      note: 'Do not report these as "missing" on the strength of this scan alone. Confirm with a live request: curl -I <url>, or check the Burp/DevTools Network tab response headers, before writing this up.',
+      simpleNote: SIMPLE_NOTES['no-csp-meta'], charIndex: -1
+    });
+  }
+
+  // Dedupe by rule + exact match position — NOT by line number. Minified /
+  // single-line production HTML puts many distinct matches on "line 1", so
+  // deduping by line would silently collapse genuinely separate findings.
+  const seen = new Set();
+  const deduped = findings.filter(f=>{
+    const k = f.rule+':'+f.charIndex;
+    if(seen.has(k)) return false;
+    seen.add(k); return true;
+  });
+  deduped.sort((a,b)=> SEV_RANK[b.severity]-SEV_RANK[a.severity] || a.charIndex-b.charIndex);
+  return deduped;
+}
+
+let scanFindingsCache = [];
+let scanMeta = {};
+
+function renderFindings(findings, meta){
+  meta = meta || {};
+  const box = document.getElementById('outBox');
+  const countEl = document.getElementById('outCount');
+  if(!box || !countEl) return;
+  countEl.textContent = `${findings.length} finding${findings.length===1?'':'s'}`;
+  if(!findings.length){
+    if(meta.totalBeforeFilter){
+      box.innerHTML = `<div class="out-empty">↑<br><b style="color:var(--gold)">${meta.totalBeforeFilter} match${meta.totalBeforeFilter===1?'':'es'} found</b> but hidden by the severity filter<br>lower "Min severity to show" (try Info &amp; above) to see them</div>`;
+      box.currentList = [`${meta.totalBeforeFilter} match(es) found but all below the selected severity filter. Lower "Min severity" to see them.`];
+    } else {
+      box.innerHTML = `<div class="out-empty">✓<br>No pattern matches at all<br>heuristic scan only — still do a manual review</div>`;
+      box.currentList = ['No findings from the static pattern scan on the provided source.'];
+    }
+    return;
+  }
+  const sevIcon = {critical:'⛔',high:'⚠',medium:'●',low:'▪',info:'ℹ'};
+  const noteFor = f => state.scanSimpleMode ? (f.simpleNote || f.note) : f.note;
+  const titleFor = f => state.scanSimpleMode ? (SIMPLE_TITLES[f.rule] || f.title) : f.title;
+  const categoryFor = f => state.scanSimpleMode ? (SIMPLE_CATEGORIES[f.category] || f.category) : f.category;
+  box.innerHTML = findings.map(f=>`
+    <div class="finding ${f.severity}">
+      <div class="fhead"><span class="ftitle">${sevIcon[f.severity]||'•'} ${escapeHtml(titleFor(f))}</span><span class="fsev">${f.severity}</span></div>
+      <div class="fmeta">${escapeHtml(categoryFor(f))} · line ${f.line}${meta.filename ? ' · '+escapeHtml(meta.filename) : ''}</div>
+      <div class="fsnippet">${escapeHtml(f.snippet)}</div>
+      <div class="fnote">${escapeHtml(noteFor(f))}</div>
+    </div>`).join('');
+  box.currentList = findings.map(f=>
+    `[${f.severity.toUpperCase()}] ${titleFor(f)} — line ${f.line}${meta.filename ? ' ('+meta.filename+')' : ''}\n  category: ${categoryFor(f)}\n  snippet: ${f.snippet}\n  note: ${noteFor(f)}\n`
+  );
+}
+
+function bindScanEvents(){
+  const btn = document.getElementById('scanBtn');
+  const input = document.getElementById('scanInput');
+  const filenameInput = document.getElementById('scanFilename');
+  const sevSelect = document.getElementById('scanMinSeverity');
+  const statusBar = document.getElementById('scanStatusBar');
+  const simpleToggle = document.getElementById('scanSimpleToggle');
+  if(!btn || !input || !statusBar) return;
+
+  if(simpleToggle){
+    const simpleDesc = "Paste in any code, config, or website source. This checks it for common problems — like passwords left in the code, or ways a hacker could sneak in their own commands. Everything happens right here in your browser; nothing gets sent anywhere. Every result is a lead worth double-checking yourself, not a guaranteed problem.";
+    const techDesc = "Paste source code, a config/.env file, or any text file's contents. Runs 100% in your browser — nothing is uploaded. Covers secrets, injection/XSS/CSRF/tabnabbing sinks, and maps attack surface (forms, API calls, third-party domains). When a dangerous sink has an obvious user-input source right next to it, severity auto-escalates to Critical — everything else stays a lead to manually verify, not a confirmed vulnerability.";
+    simpleToggle.addEventListener('click', ()=>{
+      state.scanSimpleMode = !state.scanSimpleMode;
+      simpleToggle.classList.toggle('on', state.scanSimpleMode);
+      const descEl = document.querySelector('#centerPanel .desc');
+      if(descEl) descEl.textContent = state.scanSimpleMode ? simpleDesc : techDesc;
+      renderFindings(scanFindingsCache, scanMeta);
+    });
+  }
+
+  const updateStatus = ()=>{
+    if(!input.value.trim()){ statusBar.textContent = 'paste code and hit Scan'; return; }
+    const lines = input.value.split('\n').length;
+    statusBar.textContent = `${lines.toLocaleString()} line${lines===1?'':'s'} loaded — ready to scan`;
+  };
+  input.addEventListener('input', updateStatus);
+
+  btn.addEventListener('click', ()=>{
+    try{
+      const src = input.value || '';
+      if(!src.trim()){
+        statusBar.textContent = 'nothing to scan — paste some code first';
+        scanFindingsCache = []; scanMeta = {filename: filenameInput.value};
+        renderFindings([], scanMeta);
+        return;
+      }
+      const minSev = sevSelect ? sevSelect.value : 'medium';
+      const all = scanSource(src);
+      const filtered = all.filter(f => SEV_RANK[f.severity] >= SEV_RANK[minSev]);
+      statusBar.textContent = `scan complete — ${all.length} total match${all.length===1?'':'es'}, ${filtered.length} shown at '${minSev}+'`;
+      scanFindingsCache = filtered;
+      scanMeta = {filename: filenameInput.value};
+      renderFindings(filtered, scanMeta);
+    } catch(err){
+      statusBar.textContent = 'scan hit an unexpected input — try a smaller snippet or remove unusual characters';
+      scanFindingsCache = [];
+      renderFindings([], {filename:''});
+    }
+  });
+}
+
+// ---------- sandbox / CLI help ----------
+const HELP_TEXT = {
+  random: {
+    usage: 'random [-h]',
+    desc: 'Uniform random string generation across a chosen character pool. Best when you have no OSINT on the target and just need raw keyspace coverage.',
+    fields: [
+      ['lowercase/upper/digits/special', 'toggle which character classes feed the pool'],
+      ['custom characters', 'extra literal chars appended to the pool, e.g. _-.'],
+      ['length range', 'final string length, INCLUDING prefix + suffix'],
+      ['prefix / suffix', 'fixed text glued to the front/back of every word'],
+    ],
+    example: 'lowercase+digits on, length 8-10, prefix "admin_" → admin_x7g2ka1, admin_p93zqw2 ...'
+  },
+  pattern: {
+    usage: 'pattern [-h]',
+    desc: 'Hashcat-style mask attack. You define the exact shape of the candidate and every combination in that keyspace is expanded (or sampled once it gets too large).',
+    fields: [
+      ['mask', 'string of ?l ?u ?d ?s ?a tokens and literal characters'],
+      ['?l ?u ?d ?s ?a', 'a-z / A-Z / 0-9 / !@#$%^&* / alphanumeric'],
+      ['prefix / suffix', 'stacked on top of the expanded mask'],
+    ],
+    example: 'mask "?u?l?l?l?d?d?d?d" → Abcd1234, Xqrs9081 ... (1 upper, 3 lower, 4 digits)'
+  },
+  mutate: {
+    usage: 'mutate [-h]',
+    desc: 'Takes seed words (names, company, pet, DOB fragments from OSINT) and stacks the transforms real users apply when they "make a password stronger".',
+    fields: [
+      ['seed words', 'comma/newline separated base words to mutate'],
+      ['Aa/AA/aa', 'lower, UPPER, and Capitalized case variants'],
+      ['L33t', 'a→4, e→3, i→1, o→0, s→5, t→7'],
+      ['+Nums / +Years', 'appends common suffixes like 123, 2024, 007'],
+      ['+Symbols', 'appends/prepends !@#$*'],
+      ['Reverse / Double', 'reversed spelling / word repeated twice'],
+    ],
+    example: 'seed "rocky", Aa/AA/aa + L33t + +Years → rocky2024, R0cky, R0CKY2025 ...'
+  },
+  combine: {
+    usage: 'combine [-h]',
+    desc: 'Chains 2-3 seed words the way real passwords are built ("name+pet+year"), then optionally mutates the merged result.',
+    fields: [
+      ['base words', 'one seed word per line'],
+      ['chain length', '1, 2, or 3 words joined per candidate'],
+      ['separators tried', 'none, _ , - , .'],
+      ['apply on top', 'case/+nums/+years/+symbols run on the merged word'],
+    ],
+    example: 'words john/admin/2024, chain 2 → john_admin, admin-2024, john.2024 ...'
+  },
+  presets: {
+    usage: 'presets [-h]',
+    desc: 'Curated seed lists (common passwords, usernames, network defaults, seasonal, company, tech/IT, name combos) to use as a base — feed the output into Mutate or Combine for stronger candidates.',
+    fields: [
+      ['preset categories', 'toggle any number of the built-in lists on'],
+      ['prefix / suffix / length', 'same filters as every other mode'],
+    ],
+    example: 'select Usernames + Common Passwords → merged seed list ready to export or mutate further'
+  },
+  scan: {
+    usage: 'scan [-h]',
+    desc: 'Client-side static analysis with a VAPT recon mindset: secrets, injection sinks, weak crypto, CSRF/tabnabbing/postMessage flaws, attack-surface mapping (forms/API calls/third-party domains), and taint correlation that escalates a sink to critical when user input clearly reaches it. Everything runs in your browser; nothing is uploaded anywhere.',
+    fields: [
+      ['source to scan', 'paste code, .env, config, or any text file content'],
+      ['filename (optional)', 'shown in the report for context only'],
+      ['min severity', 'hide low-signal/info matches if you only want high-impact findings'],
+      ['Recon category', 'forms, fetch()/axios calls, and third-party domains, listed as info-level leads to manually test'],
+    ],
+    example: 'paste server.js, hit Scan → flags res.redirect(req.query.url) as a CRITICAL open redirect (taint match), plus lists every form/endpoint found as a recon lead'
+  },
+};
+
+function sbxPush(text, cls){ state.sandboxLog.push({text, cls: cls||'sbx-out'}); }
+function sbxEcho(cmd){ sbxPush(`root@kali:~# ${cmd}`, 'sbx-cmd'); }
+
+function renderSandboxTerm(){
+  const term = document.getElementById('sbxTerm');
+  if(!term) return;
+  term.innerHTML = state.sandboxLog.map(l=>`<div class="sbx-line ${l.cls}">${escapeHtml(l.text)}</div>`).join('');
+  term.scrollTop = term.scrollHeight;
+}
+
+function printHelpList(){
+  sbxPush('AVAILABLE COMMANDS', 'sbx-heading');
+  sbxPush('  help                    show this list', 'sbx-out');
+  sbxPush('  <mode> -h               usage for a mode: random, pattern, mutate, combine, presets, scan', 'sbx-out');
+  sbxPush('  man <mode>              same as "<mode> -h"', 'sbx-out');
+  sbxPush('  use <mode>              jump straight to that generator panel', 'sbx-out');
+  sbxPush('  charsets                list the ?l ?u ?d ?s ?a token definitions', 'sbx-out');
+  sbxPush('  version                 show tool version', 'sbx-out');
+  sbxPush('  about                   what this tool does', 'sbx-out');
+  sbxPush('  scope                   authorized-use reminder', 'sbx-out');
+  sbxPush('  clear                   clear this terminal', 'sbx-out');
+  sbxPush('', 'sbx-out');
+  sbxPush("example: type 'combine -h' to see exactly how Combine mode works", 'sbx-flag');
+  renderSandboxTerm();
+}
+
+function printModeHelp(mode){
+  const h = HELP_TEXT[mode];
+  if(!h){ sbxPush(`no help entry for '${mode}'`, 'sbx-err'); renderSandboxTerm(); return; }
+  sbxPush(`${mode.toUpperCase()} — ${h.usage}`, 'sbx-heading');
+  sbxPush(h.desc, 'sbx-out');
+  sbxPush('', 'sbx-out');
+  sbxPush('FIELDS', 'sbx-flag');
+  h.fields.forEach(([name, desc]) => sbxPush(`  ${name.padEnd(24)} ${desc}`, 'sbx-out'));
+  sbxPush('', 'sbx-out');
+  sbxPush('EXAMPLE', 'sbx-flag');
+  sbxPush('  ' + h.example, 'sbx-out');
+  sbxPush('', 'sbx-out');
+  renderSandboxTerm();
+}
+
+function printCharsets(){
+  sbxPush('MASK TOKENS (used in Pattern mode)', 'sbx-heading');
+  sbxPush('  ?l   a-z', 'sbx-out');
+  sbxPush('  ?u   A-Z', 'sbx-out');
+  sbxPush('  ?d   0-9', 'sbx-out');
+  sbxPush('  ?s   !@#$%^&*', 'sbx-out');
+  sbxPush('  ?a   a-z + A-Z + 0-9', 'sbx-out');
+  sbxPush('  any other char is treated as a literal', 'sbx-out');
+  sbxPush('', 'sbx-out');
+  renderSandboxTerm();
+}
+
+function switchMode(name){
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===name));
+  state.mode = name;
+  renderPanel();
+}
+
+const MODE_NAMES = ['random','pattern','mutate','combine','presets','scan'];
+
+function runSandboxCommand(raw){
+  const trimmed = raw.trim();
+  sbxEcho(trimmed);
+  const parts = trimmed.split(/\s+/);
+  const cmd = parts[0].toLowerCase();
+  const args = parts.slice(1);
+  const hasHelpFlag = args.includes('-h') || args.includes('--help');
+
+  if(MODE_NAMES.includes(cmd)){
+    if(hasHelpFlag) printModeHelp(cmd);
+    else { renderSandboxTerm(); switchMode(cmd); }
+    return;
+  }
+  if(cmd === 'man'){
+    if(MODE_NAMES.includes(args[0])) printModeHelp(args[0]);
+    else { sbxPush(`man: unknown topic '${args[0]||''}' — try: man combine`, 'sbx-err'); renderSandboxTerm(); }
+    return;
+  }
+  if(cmd === 'use'){
+    if(MODE_NAMES.includes(args[0])){ sbxPush(`switched to ${args[0]} mode →`, 'sbx-out'); renderSandboxTerm(); switchMode(args[0]); }
+    else { sbxPush(`use: unknown mode '${args[0]||''}'`, 'sbx-err'); renderSandboxTerm(); }
+    return;
+  }
+  if(cmd === 'help'){ printHelpList(); return; }
+  if(cmd === 'charsets'){ printCharsets(); return; }
+  if(cmd === 'clear'){ state.sandboxLog = []; renderSandboxTerm(); return; }
+  if(cmd === 'version'){ sbxPush('wordlist-forge v2.1 — bug-bounty / VAPT wordlist engine', 'sbx-out'); renderSandboxTerm(); return; }
+  if(cmd === 'about'){ sbxPush('Client-side wordlist / mask / mutation engine for authorized penetration testing and bug-bounty recon. Nothing is sent off your browser.', 'sbx-out'); renderSandboxTerm(); return; }
+  if(cmd === 'scope'){ sbxPush('Run generated lists only against targets you own or hold written authorization for — a CTF box, your own lab, or a signed pentest / bug-bounty scope.', 'sbx-flag'); renderSandboxTerm(); return; }
+
+  sbxPush(`command not found: ${cmd} — type 'help'`, 'sbx-err');
+  renderSandboxTerm();
+}
+
+function bindSandboxEvents(){
+  if(!state.sandboxLog.length){
+    sbxPush('WORDLIST FORGE — SANDBOX', 'sbx-heading');
+    sbxPush("Type 'help' for commands, or '<mode> -h' for usage of a specific generator (e.g. combine -h).", 'sbx-out');
+    sbxPush('', 'sbx-out');
+  }
+  renderSandboxTerm();
+  const input = document.getElementById('sbxInput');
+  if(!input) return;
+  input.focus();
+  input.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){
+      const val = input.value;
+      if(val.trim()){
+        state.sandboxHistory.push(val);
+        state.sandboxHistoryIdx = state.sandboxHistory.length;
+        runSandboxCommand(val);
+      }
+      input.value = '';
+    } else if(e.key === 'ArrowUp'){
+      if(state.sandboxHistoryIdx > 0){ state.sandboxHistoryIdx--; input.value = state.sandboxHistory[state.sandboxHistoryIdx] || ''; }
+      e.preventDefault();
+    } else if(e.key === 'ArrowDown'){
+      if(state.sandboxHistoryIdx < state.sandboxHistory.length-1){ state.sandboxHistoryIdx++; input.value = state.sandboxHistory[state.sandboxHistoryIdx] || ''; }
+      else { state.sandboxHistoryIdx = state.sandboxHistory.length; input.value = ''; }
+      e.preventDefault();
+    }
+  });
+}
+
+// ---------- estimate (real dry-run, not a guess) ----------
+function rawKeyspaceSize(){
+  // rough pre-filter keyspace size, just to decide whether to warn about capping
+  if(state.mode==='pattern'){
+    const tokens = parseMask(state.pattern);
+    if(!tokens.length) return 0;
+    let total = 1;
+    for(const t of tokens){ total *= t.length; if(total > 1e12) return Infinity; }
+    return total;
+  }
+  return null; // not needed for other modes
+}
+
+let estimateTimer = null;
+function updateEstimate(){
+  clearTimeout(estimateTimer);
+  estimateTimer = setTimeout(runEstimate, 120);
+}
+
+function runEstimate(){
+  const bar = document.getElementById('estimateBar');
+  if(!bar) return;
+
+  const affixLen = state.prefix.length + state.suffix.length;
+  const maxLen = Math.max(state.minLen, state.maxLen);
+  if(affixLen > maxLen){
+    bar.classList.add('capped');
+    bar.innerHTML = `⚠ prefix+suffix alone is <b>${affixLen}</b> chars but max length is <b>${maxLen}</b> — nothing can match. Raise max length or shorten prefix/suffix.`;
+    return;
+  }
+
+  // real dry-run using the same generators the Generate button uses
+  const final = computeFinalList();
+  const keyspace = rawKeyspaceSize();
+  const capped = keyspace !== null && (keyspace === Infinity || keyspace > MAX_RESULTS);
+
+  bar.classList.toggle('capped', false);
+  if(capped){
+    const ksDisplay = keyspace === Infinity ? '∞' : keyspace.toLocaleString();
+    bar.innerHTML = `keyspace <b>${ksDisplay}</b> exceeds cap — sampling <b>${final.length.toLocaleString()}</b> word${final.length===1?'':'s'}`;
+    bar.classList.add('capped');
+  } else if(!final.length){
+    bar.classList.add('capped');
+    bar.innerHTML = `estimated output <b>0</b> words — widen the length range or add seed words`;
+  } else {
+    bar.innerHTML = `estimated output <b>${final.length.toLocaleString()}</b> word${final.length===1?'':'s'}`;
+  }
+}
+
+// ---------- helpers ----------
+function parseMask(mask){
+  const tokens = [];
+  for(let i=0;i<mask.length;i++){
+    if(mask[i]==='?' && i+1<mask.length && 'ludsa'.includes(mask[i+1])){
+      const t = mask[i+1];
+      let set;
+      if(t==='l') set = CHARSETS.lower;
+      else if(t==='u') set = CHARSETS.upper;
+      else if(t==='d') set = CHARSETS.digits;
+      else if(t==='s') set = CHARSETS.special;
+      else if(t==='a') set = CHARSETS.lower+CHARSETS.upper+CHARSETS.digits;
+      tokens.push(set.split(''));
+      i++;
+    } else {
+      tokens.push([mask[i]]);
+    }
+  }
+  return tokens;
+}
+
+function applyAffixLenFilter(list){
+  const seen = new Set();
+  const out = [];
+  for(const w of list){
+    const full = state.prefix + w + state.suffix;
+    if(full.length < state.minLen || full.length > state.maxLen) continue;
+    if(seen.has(full)) continue;
+    seen.add(full);
+    out.push(full);
+    if(out.length >= MAX_RESULTS) break;
+  }
+  return out;
+}
+
+// ---------- generators ----------
+function genRandom(){
+  let pool = '';
+  if(state.charsets.lower) pool += CHARSETS.lower;
+  if(state.charsets.upper) pool += CHARSETS.upper;
+  if(state.charsets.digits) pool += CHARSETS.digits;
+  if(state.charsets.special) pool += CHARSETS.special;
+  pool += state.customChars || '';
+  if(!pool) return [];
+  const affixLen = state.prefix.length + state.suffix.length;
+  const loFull = Math.min(state.minLen, state.maxLen), hiFull = Math.max(state.minLen, state.maxLen);
+  const loCore = Math.max(1, loFull - affixLen);
+  const hiCore = hiFull - affixLen;
+  if(hiCore < 1) return []; // prefix+suffix alone already exceeds the max length
+  const count = Math.min(2000, MAX_RESULTS);
+  const results = new Set();
+  let attempts = 0;
+  const targetLen = () => loCore + Math.floor(Math.random()*(hiCore-loCore+1));
+  while(results.size < count && attempts < count*25){
+    attempts++;
+    const len = targetLen();
+    let s = '';
+    for(let i=0;i<len;i++) s += pool[Math.floor(Math.random()*pool.length)];
+    results.add(state.prefix + s + state.suffix);
+  }
+  return [...results];
+}
+
+function genPattern(){
+  const tokens = parseMask(state.pattern || '');
+  if(!tokens.length) return [];
+  let total = 1;
+  for(const t of tokens){ total *= t.length; if(total > 1e12) break; }
+  const results = [];
+  if(total <= MAX_RESULTS){
+    const build = (idx, acc)=>{
+      if(results.length >= MAX_RESULTS) return;
+      if(idx === tokens.length){ results.push(acc); return; }
+      for(const ch of tokens[idx]){
+        build(idx+1, acc+ch);
+        if(results.length >= MAX_RESULTS) return;
+      }
+    };
+    build(0,'');
+  } else {
+    const seen = new Set();
+    let attempts = 0;
+    while(seen.size < MAX_RESULTS && attempts < MAX_RESULTS*3){
+      attempts++;
+      let s = '';
+      for(const t of tokens) s += t[Math.floor(Math.random()*t.length)];
+      seen.add(s);
+    }
+    results.push(...seen);
+  }
+  return results;
+}
+
+function leetify(w){
+  return w.toLowerCase()
+    .replace(/a/g,'4').replace(/e/g,'3').replace(/i/g,'1')
+    .replace(/o/g,'0').replace(/s/g,'5').replace(/t/g,'7');
+}
+
+function applyMutationOps(baseVariants, ops){
+  let variants = new Set(baseVariants);
+  if(ops.case){
+    const base = [...variants];
+    base.forEach(v=>{
+      variants.add(v.toLowerCase());
+      variants.add(v.toUpperCase());
+      variants.add(v.charAt(0).toUpperCase()+v.slice(1).toLowerCase());
+    });
+  }
+  if(ops.l33t){
+    const base = [...variants];
+    base.forEach(v=>variants.add(leetify(v)));
+  }
+  if(ops.reverse){
+    const base = [...variants];
+    base.forEach(v=>variants.add(v.split('').reverse().join('')));
+  }
+  if(ops.double){
+    const base = [...variants];
+    base.forEach(v=>variants.add(v+v));
+  }
+  if(ops.nums){
+    const base = [...variants];
+    const suf = ['1','12','123','1234','01','007','99','00'];
+    base.forEach(v=> suf.forEach(s=>variants.add(v+s)));
+  }
+  if(ops.years){
+    const base = [...variants];
+    const years = ['2020','2021','2022','2023','2024','2025','2026'];
+    base.forEach(v=> years.forEach(y=>variants.add(v+y)));
+  }
+  if(ops.symbols){
+    const base = [...variants];
+    const syms = ['!','@','#','$','*'];
+    base.forEach(v=> syms.forEach(s=>{variants.add(v+s); variants.add(s+v);}));
+  }
+  return [...variants];
+}
+
+function genMutate(){
+  const words = state.mutateWords.length ? state.mutateWords : [];
+  if(!words.length) return [];
+  let results = [];
+  for(const w of words){
+    results = results.concat(applyMutationOps([w], state.mutateOps));
+    if(results.length > MAX_RESULTS) break;
+  }
+  return results.slice(0, MAX_RESULTS);
+}
+
+function genCombine(){
+  const words = state.combineWords.split('\n').map(w=>w.trim()).filter(Boolean);
+  if(words.length < 1) return [];
+  const seps = ['','_','-','.'];
+  const results = new Set();
+  // depth 1: raw words
+  words.forEach(w=>results.add(w));
+  // depth 2
+  if(state.combineDepth >= 2){
+    outer2:
+    for(const a of words){
+      for(const b of words){
+        if(a===b) continue;
+        for(const sep of seps){
+          results.add(a+sep+b);
+          if(results.size >= MAX_RESULTS) break outer2;
+        }
+      }
+    }
+  }
+  // depth 3
+  if(state.combineDepth >= 3){
+    outer3:
+    for(const a of words){
+      for(const b of words){
+        if(b===a) continue;
+        for(const c of words){
+          if(c===a||c===b) continue;
+          for(const sep of seps){
+            results.add(a+sep+b+sep+c);
+            if(results.size >= MAX_RESULTS) break outer3;
+          }
+        }
+      }
+    }
+  }
+  let combined = [...results];
+  const anyOp = Object.values(state.combineOps).some(Boolean);
+  if(anyOp){
+    let mutated = [];
+    for(const w of combined){
+      mutated = mutated.concat(applyMutationOps([w], state.combineOps));
+      if(mutated.length > MAX_RESULTS) break;
+    }
+    combined = mutated;
+  }
+  return combined.slice(0, MAX_RESULTS);
+}
+
+function genPresets(){
+  let results = [];
+  for(const key of state.presetSel){
+    if(PRESETS[key]) results = results.concat(PRESETS[key].words);
+  }
+  return results;
+}
+
+let lastFullList = [];
+
+function computeFinalList(){
+  let raw = [];
+  if(state.mode==='random') raw = genRandom();
+  else if(state.mode==='pattern') raw = genPattern();
+  else if(state.mode==='mutate') raw = genMutate();
+  else if(state.mode==='combine') raw = genCombine();
+  else if(state.mode==='presets') raw = genPresets();
+
+  if(state.mode==='random'){
+    return [...new Set(raw)];
+  }
+  return applyAffixLenFilter(raw);
+}
+
+function generate(){
+  const final = computeFinalList();
+  lastFullList = final;
+  renderOutput(final);
+}
+
+function renderOutput(list){
+  const box = document.getElementById('outBox');
+  const countEl = document.getElementById('outCount');
+  countEl.textContent = `${list.length} word${list.length===1?'':'s'}`;
+  if(!list.length){
+    box.innerHTML = `<div class="out-empty">⚠<br>No results for these settings<br>widen the length range or add seed words</div>`;
+    box.currentList = [];
+    return;
+  }
+  const html = list.map((w,i)=>`<div class="out-line"><span class="ln">${i+1}</span><span class="wd">${escapeHtml(w)}</span></div>`).join('');
+  box.innerHTML = html;
+  box.currentList = list;
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+document.getElementById('filterInput').addEventListener('input', (e)=>{
+  const q = e.target.value.toLowerCase();
+  if(state.mode === 'scan'){
+    const filtered = q ? scanFindingsCache.filter(f => (f.title+' '+f.category+' '+f.snippet+' '+f.note).toLowerCase().includes(q)) : scanFindingsCache;
+    renderFindings(filtered, scanMeta);
+  } else {
+    const filtered = q ? lastFullList.filter(w=>w.toLowerCase().includes(q)) : lastFullList;
+    renderOutput(filtered);
+  }
+});
+
+document.getElementById('copyBtn').addEventListener('click', ()=>{
+  const box = document.getElementById('outBox');
+  const list = box.currentList || [];
+  if(!list.length) return;
+  navigator.clipboard.writeText(list.join('\n'));
+  const btn = document.getElementById('copyBtn');
+  const old = btn.textContent;
+  btn.textContent = 'copied';
+  setTimeout(()=>btn.textContent=old, 1200);
+});
+
+document.getElementById('dlBtn').addEventListener('click', ()=>{
+  const box = document.getElementById('outBox');
+  const list = box.currentList || [];
+  if(!list.length) return;
+  const blob = new Blob([list.join('\n')], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'wordlist.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  const box = document.getElementById('outBox');
+  box.currentList = [];
+  lastFullList = [];
+  scanFindingsCache = [];
+  document.getElementById('filterInput').value = '';
+  document.getElementById('outCount').textContent = '0 results';
+  box.innerHTML = `<div class="out-empty">⚡<br>Results will render here<br>after you generate or scan</div>`;
+});
+
+renderPanel();
+</script>
+</body>
+</html>
